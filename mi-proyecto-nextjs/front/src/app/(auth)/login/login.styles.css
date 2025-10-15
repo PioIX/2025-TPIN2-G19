@@ -1,0 +1,98 @@
+.login-container {
+    max-width: 370px;
+    margin: 60px auto;
+    padding: 36px 28px 28px 28px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 18px;
+    box-shadow: 0 6px 32px rgba(44, 62, 80, 0.13);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 2px solid #1976d2;
+}
+
+.login-container h2 {
+    margin-bottom: 28px;
+    color: #1976d2;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 8px #e3eafc;
+}
+
+.login-container form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.login-container input {
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1.5px solid #b0bec5;
+    font-size: 1rem;
+    background: #fafdff;
+    transition: border 0.2s;
+}
+
+.login-container input:focus {
+    border: 1.5px solid #1976d2;
+    outline: none;
+    background: #e3eafc;
+}
+
+.login-container button {
+    padding: 12px 0;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #1976d2 60%, #64b5f6 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #b3c6e6;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.login-container button:hover {
+    background: linear-gradient(90deg, #1565c0 60%, #42a5f5 100%);
+    transform: translateY(-2px) scale(1.03);
+}
+
+.login-container .error {
+    color: #d32f2f;
+    margin-top: 10px;
+    font-size: 1rem;
+    text-align: center;
+    background: #ffeaea;
+    border-radius: 6px;
+    padding: 6px 0;
+    border: 1px solid #ffcdd2;
+}
+
+.login-container p {
+    margin-top: 22px;
+    font-size: 1.05rem;
+    color: #444;
+    text-align: center;
+}
+
+.login-container a {
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.login-container a:hover {
+    color: #0d47a1;
+    text-decoration: underline;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(120deg, #1976d2 0%, #64b5f6 100%);
+}

@@ -1,0 +1,26 @@
+{
+  "name": "creacion-chat-g19",
+  "version": "1.0.0",
+  "description": "Proyecto de mitad de año",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon index.js",
+    "pio": "nodemon --env-file=.pio.env index.js",
+    "home": "nodemon --env-file=.home.env index.js"
+  },
+  "keywords": [
+    "ES"
+  ],
+  "author": "Bautista Malagreca - Sebastian Cortes - Camila Giardini - Emma Garegnani",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "mysql2": "^3.14.1",
+    "nodemon": "^3.1.10",
+    "socket.io": "^4.8.1"
+  }
+}
