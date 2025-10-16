@@ -2,80 +2,80 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import styles from "./login.module.css"
+import "./login.styles.css"
 
 export default function LoginPage() {
   const [usuarios, setUsuarios] = useState([])
-  const [idUsuario, setIdUsuario] = useState(null)
-  const [loginInput, setLoginInput] = useState("") // username o email
+  const [loginInput, setLoginInput] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const router = useRouter()
 
   useEffect(() => {
-    fetch("http://localhost:4000/users")
-      .then(response => response.json())
-      .then(result => setUsuarios(result))
-      .catch(err => {
-        console.log("Error al conectar con el servidor:", err)
-        setError("No se pudo conectar al servidor.")
-      })
-  }, [])
+    async function obtenerUsuarios() {
+      try {
+        const res = await fetch("http://localhost:4000/users")
 
-  function signIn() {
-    setError("")
-    let encontrado = false
+        if (!res.ok) {
+          throw new Error("Error al obtener usuarios")
+        }
 
-    for (let i = 0; i < usuarios.length; i++) {
-      const u = usuarios[i]
-      const coincideUsuario = u.username === loginInput || u.email === loginInput
-
-      if (coincideUsuario && u.password === password) {
-        encontrado = true
-        setIdUsuario(u.user_id)
-        console.log("Login exitoso ✅", u)
-        router.push(`/home?user_id=${u.user_id}`)
-        break
+        const data = await res.json()
+        setUsuarios(data)
+      } catch (err) {
+        console.error("Error al conectar con el servidor:", err)
+        setError("No se pudo conectar con el servidor.")
       }
     }
 
-    if (!encontrado) {
+    obtenerUsuarios()
+  }, [])
+
+  const handleLogin = (e) => {
+    e.preventDefault()
+    setError("")
+
+    const user = usuarios.find(
+      (u) =>
+        (u.username === loginInput || u.email === loginInput) &&
+        u.password === password
+    )
+
+    if (user) {
+      console.log("✅ Login exitoso", user)
+      router.push(`/home?user_id=${user.user_id}`)
+    } else {
       setError("Usuario o contraseña incorrectos ❌")
     }
   }
 
   return (
-    <div className={styles.container}>
+    <div className="login-container">
       <h2>Iniciar Sesión</h2>
-      <form
-        className={styles.form}
-        onSubmit={e => {
-          e.preventDefault()
-          signIn()
-        }}
-      >
+
+      <form className="login-form" onSubmit={handleLogin}>
         <input
           type="text"
           placeholder="Usuario o correo electrónico"
           value={loginInput}
-          onChange={e => setLoginInput(e.target.value)}
+          onChange={(e) => setLoginInput(e.target.value)}
           required
         />
         <input
           type="password"
           placeholder="Contraseña"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
         <button type="submit">Entrar</button>
       </form>
 
-      {error && <p className={styles.error}>{error}</p>}
+      {error && <p className="error">{error}</p>}
 
-      <p>
+      <p className="register-text">
         ¿No tienes cuenta?{" "}
-        <a href="/register" className={styles.link}>
+        <a href="/register" className="link">
           Regístrate aquí
         </a>
       </p>

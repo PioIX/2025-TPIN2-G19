@@ -1,70 +1,122 @@
 "use client"
 
-import Button from "@/components/Button"
-import Input from "@/components/Input"
-import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import styles from "@/app/(autentication)/register/register.module.css"
+import "./register.styles.css"
 
 export default function RegisterPage() {
-    const [usuarios, setUsuarios] = useState([])
-    const [email, setEmail] = useState("")
-    const [nombre, setNombre] = useState("")
-    const [password, setPassword] = useState("")
-    const [foto, setFoto] = useState("")
-    const [error, setError] = useState("")
-    const router = useRouter()
+  const [usuarios, setUsuarios] = useState([])
+  const [nombre, setNombre] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [foto, setFoto] = useState("")
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const router = useRouter()
 
-    
-
-    // async function singUp(e) {
-    //     e.preventDefault()
-    //     const nuevoUsuario = {
-    //         email: email,
-    //         password: password
-    //     }
-
-    //     const existe = usuarios.some(u => u.email === nuevoUsuario.email)
-
-    //     if (existe) {
-    //         setError("Ese correo ya está registrado")
-    //         return
-    //     }
-
-    //     try {
-    //         const response = await fetch("http://localhost:4006/usuarios", {
-    //             method: "POST",
-    //             headers: { "Content-Type": "application/json" },
-    //             body: JSON.stringify(nuevoUsuario)
-    //         })
-
-    //         if (response.ok) {
-    //             router.push("/login")
-    //         } else {
-    //             setError("Error al crear el usuario")
-    //         }
-    //     } catch (error) {
-    //         setError("Hubo un problema con el registro")
-    //     }
-    // }
-    function signUp() {
-        console.log("hola")
+  useEffect(() => {
+    async function obtenerUsuarios() {
+      try {
+        const res = await fetch("http://localhost:4000/users")
+        if (!res.ok) throw new Error("Error al obtener usuarios")
+        const data = await res.json()
+        setUsuarios(data)
+      } catch (err) {
+        console.error("Error al conectar con el servidor:", err)
+        setError("No se pudo obtener la lista de usuarios.")
+      }
     }
 
+    obtenerUsuarios()
+  }, [])
 
+  async function signUp(e) {
+    e.preventDefault()
+    setError("")
+    setSuccess("")
 
-    return (
-        <div className={styles.Contenedorbody}>
-            <div className={styles.loginContainer}>
-                <h2>Register</h2>
-                <Input page="register" placeholder="Escriba su nombre" type="text" onChange={(e) => {setNombre(e.target.value)}}/>
-                <Input page="register" placeholder="Escriba su Conraseña" type="password" onChange={(e) => {setPassword(e.target.value)}}/>
-                <Input page="register" placeholder="Escriba su mail" type="email" onChange={(e) => {setEmail(e.target.value)}}/>
-                <Input page="register" placeholder="Ponga el enlace de su foto (publico)" type="text" onChange={(e) => {setFoto(e.target.value)}}/>
-                <Button onClick={signUp} page="register" text="hola como estas"></Button>
-            </div>
-            
-        </div>
-    )
+    if (!nombre || !email || !password) {
+      setError("Completa todos los campos obligatorios ❌")
+      return
+    }
+
+    const existe = usuarios.some((u) => u.email === email)
+    if (existe) {
+      setError("Ese correo ya está registrado ⚠️")
+      return
+    }
+
+    const nuevoUsuario = {
+      username: nombre,
+      email,
+      password,
+      photo: foto,
+      wins: 0,
+    }
+
+    try {
+      const res = await fetch("http://localhost:4000/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nuevoUsuario),
+      })
+
+      if (res.ok) {
+        setSuccess("Registro exitoso ✅ Redirigiendo...")
+        setTimeout(() => router.push("/login"), 1500)
+      } else {
+        setError("Error al crear el usuario ❌")
+      }
+    } catch (err) {
+      console.error("Error al registrar usuario:", err)
+      setError("No se pudo conectar con el servidor ❌")
+    }
+  }
+
+  return (
+    <div className="register-container">
+      <h2>Crear cuenta</h2>
+
+      <form className="register-form" onSubmit={signUp}>
+        <input
+          type="text"
+          placeholder="Nombre de usuario"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          required
+        />
+        <input
+          type="email"
+          placeholder="Correo electrónico"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="URL de tu foto (opcional)"
+          value={foto}
+          onChange={(e) => setFoto(e.target.value)}
+        />
+        <button type="submit">Registrarse</button>
+      </form>
+
+      {error && <p className="error">{error}</p>}
+      {success && <p className="success">{success}</p>}
+
+      <p className="login-text">
+        ¿Ya tienes cuenta?{" "}
+        <a href="/login" className="link">
+          Inicia sesión aquí
+        </a>
+      </p>
+    </div>
+  )
 }
