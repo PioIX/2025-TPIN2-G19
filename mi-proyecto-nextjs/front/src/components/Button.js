@@ -3,14 +3,14 @@
 import React from "react"
 import "./Button.css"
 
-export default function Button({ text, onClick, page, type = "button" }) {
+export default function Button(props) {
   return (
     <button
-      type={type}
+      type="button"
       className={`btn ${page === "register" ? "btn-register" : "btn-login"}`}
-      onClick={onClick}
+      onClick={props.onClick}
     >
-      {text}
+      {props.text}
     </button>
   )
 }
