@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Button from "@/components/Button"
+import Input from "@/components/Input"
+import FormContainer from "@/components/FormContainer"
 import "./register.styles.css"
 
 export default function RegisterPage() {
@@ -23,7 +26,7 @@ export default function RegisterPage() {
         setUsuarios(data)
       } catch (err) {
         console.error("Error al conectar con el servidor:", err)
-        setError("No se pudo obtener la lista de usuarios.")
+        setError("No se pudo conectar con el servidor.")
       }
     }
 
@@ -34,11 +37,6 @@ export default function RegisterPage() {
     e.preventDefault()
     setError("")
     setSuccess("")
-
-    if (!nombre || !email || !password) {
-      setError("Completa todos los campos obligatorios ❌")
-      return
-    }
 
     const existe = usuarios.some((u) => u.email === email)
     if (existe) {
@@ -74,49 +72,48 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="register-container">
-      <h2>Crear cuenta</h2>
+    <div className="auth-body">
+      <FormContainer title="Crear cuenta">
+        <form className="auth-form" onSubmit={signUp}>
+          <Input
+            page="register"
+            placeholder="Nombre de usuario"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+          />
+          <Input
+            page="register"
+            placeholder="Correo electrónico"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <Input
+            page="register"
+            placeholder="Contraseña"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Input
+            page="register"
+            placeholder="URL de tu foto (opcional)"
+            value={foto}
+            onChange={(e) => setFoto(e.target.value)}
+          />
+          <Button text="Registrarse" type="submit" page="register" />
+        </form>
 
-      <form className="register-form" onSubmit={signUp}>
-        <input
-          type="text"
-          placeholder="Nombre de usuario"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          required
-        />
-        <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="URL de tu foto (opcional)"
-          value={foto}
-          onChange={(e) => setFoto(e.target.value)}
-        />
-        <button type="submit">Registrarse</button>
-      </form>
+        {error && <p className="error">{error}</p>}
+        {success && <p className="success">{success}</p>}
 
-      {error && <p className="error">{error}</p>}
-      {success && <p className="success">{success}</p>}
-
-      <p className="login-text">
-        ¿Ya tienes cuenta?{" "}
-        <a href="/login" className="link">
-          Inicia sesión aquí
-        </a>
-      </p>
+        <p className="change-link">
+          ¿Ya tienes cuenta?{" "}
+          <a href="/login" className="link">
+            Inicia sesión aquí
+          </a>
+        </p>
+      </FormContainer>
     </div>
   )
 }

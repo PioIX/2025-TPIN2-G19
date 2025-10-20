@@ -9,3 +9,11 @@
   padding: 2rem 3rem;
   box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
 }
+.form-container h2 {
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+}
+.form-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}

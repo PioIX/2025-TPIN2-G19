@@ -1,21 +1,23 @@
 .btn {
   width: 100%;
-  padding: 0.8rem;
+  padding: 0.9rem 1.2rem;
   border: none;
   border-radius: 10px;
-  font-weight: bold;
+  font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  transition: 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+  letter-spacing: 0.5px;
 }
 
-.btn-login,
-.btn-register {
+.btnLogin {
   background-color: gold;
   color: #000;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
 }
 
-.btn:hover {
+.btnLogin:hover {
   background-color: #f5e050;
   transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
 }

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Input from "@/components/Input"
+import Button from "@/components/Button"
+import FormContainer from "@/components/FormContainer"
 import "./login.styles.css"
 
 export default function LoginPage() {
@@ -15,11 +18,7 @@ export default function LoginPage() {
     async function obtenerUsuarios() {
       try {
         const res = await fetch("http://localhost:4000/users")
-
-        if (!res.ok) {
-          throw new Error("Error al obtener usuarios")
-        }
-
+        if (!res.ok) throw new Error("Error al obtener usuarios")
         const data = await res.json()
         setUsuarios(data)
       } catch (err) {
@@ -42,7 +41,6 @@ export default function LoginPage() {
     )
 
     if (user) {
-      console.log("✅ Login exitoso", user)
       router.push(`/home?user_id=${user.user_id}`)
     } else {
       setError("Usuario o contraseña incorrectos ❌")
@@ -51,34 +49,33 @@ export default function LoginPage() {
 
   return (
     <div className="login-container">
-      <h2>Iniciar Sesión</h2>
+      <FormContainer title="Iniciar Sesión">
+        <form onSubmit={handleLogin} className="login-form">
+          <Input
+            page="login"
+            placeholder="Usuario o correo electrónico"
+            value={loginInput}
+            onChange={(e) => setLoginInput(e.target.value)}
+          />
+          <Input
+            page="login"
+            placeholder="Contraseña"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button text="Entrar" type="submit" page="login" />
+        </form>
 
-      <form className="login-form" onSubmit={handleLogin}>
-        <input
-          type="text"
-          placeholder="Usuario o correo electrónico"
-          value={loginInput}
-          onChange={(e) => setLoginInput(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Entrar</button>
-      </form>
+        {error && <p className="error">{error}</p>}
 
-      {error && <p className="error">{error}</p>}
-
-      <p className="register-text">
-        ¿No tienes cuenta?{" "}
-        <a href="/register" className="link">
-          Regístrate aquí
-        </a>
-      </p>
+        <p className="register-text">
+          ¿No tienes cuenta?{" "}
+          <a href="/register" className="link">
+            Regístrate aquí
+          </a>
+        </p>
+      </FormContainer>
     </div>
   )
 }

@@ -1,15 +1,16 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import Button from "@/components/button"
+import clsx from "clsx"
+import Button from "@/components/Button"
 import FormContainer from "@/components/FormContainer"
-import "./page.module.css"
+import styles from "./page.module.css"
 
 export default function Home() {
   const router = useRouter()
 
   return (
-    <div className="home-container">
+    <div className={clsx(styles.homeContainer)}>
       <FormContainer title="CLUE">
         <Button
           text="¡Comienza a jugar!"
@@ -20,4 +21,3 @@ export default function Home() {
     </div>
   )
 }
- 

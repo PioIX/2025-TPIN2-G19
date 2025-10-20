@@ -1,13 +1,18 @@
 "use client"
 
 import React from "react"
-import "./Button.css"
+import clsx from "clsx"
+import styles from "./Button.css"
 
-export default function Button({ text, onClick, page, type = "button" }) {
+export default function Button({ text, onClick, page, type = "button", className }) {
   return (
     <button
       type={type}
-      className={`btn ${page === "register" ? "btn-register" : "btn-login"}`}
+      className={clsx(
+        styles.btn,
+        page === "register" ? styles.btnRegister : styles.btnLogin,
+        className
+      )}
       onClick={onClick}
     >
       {text}
