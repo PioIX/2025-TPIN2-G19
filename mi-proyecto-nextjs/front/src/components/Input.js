@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import "./Input.css"
+import "./Input.module.css"
 
 export default function Input({
   page,

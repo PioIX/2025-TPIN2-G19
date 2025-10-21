@@ -5,14 +5,13 @@ import { useRouter } from "next/navigation"
 import Button from "@/components/Button"
 import Input from "@/components/Input"
 import FormContainer from "@/components/FormContainer"
-import "./register.styles.css"
+import styles from "./register.module.css"
 
 export default function RegisterPage() {
   const [usuarios, setUsuarios] = useState([])
   const [nombre, setNombre] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [foto, setFoto] = useState("")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const router = useRouter()
@@ -72,48 +71,47 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="auth-body">
-      <FormContainer title="Crear cuenta">
-        <form className="auth-form" onSubmit={signUp}>
-          <Input
-            page="register"
+    <div className={styles.RegisterContainer}>
+      <div className={styles.FormBox}>
+        <h2 className={styles.Title}>Crear cuenta</h2>
+
+        <form className={styles.RegisterForm} onSubmit={signUp}>
+          <input
+            className={styles.Input}
             placeholder="Nombre de usuario"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
           />
-          <Input
-            page="register"
+          <input
+            className={styles.Input}
             placeholder="Correo electrónico"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Input
-            page="register"
+          <input
+            className={styles.Input}
             placeholder="Contraseña"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Input
-            page="register"
-            placeholder="URL de tu foto (opcional)"
-            value={foto}
-            onChange={(e) => setFoto(e.target.value)}
-          />
-          <Button text="Registrarse" type="submit" page="register" />
+
+          <button type="submit" className={styles.Button}>
+            Registrarse
+          </button>
         </form>
 
-        {error && <p className="error">{error}</p>}
-        {success && <p className="success">{success}</p>}
+        {error && <p className={styles.Error}>{error}</p>}
+        {success && <p className={styles.Success}>{success}</p>}
 
-        <p className="change-link">
-          ¿Ya tienes cuenta?{" "}
-          <a href="/login" className="link">
-            Inicia sesión aquí
+        <p className={styles.ChangeLink}>
+          ¿Ya tenés cuenta?{" "}
+          <a href="/login" className={styles.Link}>
+            Iniciá sesión aquí
           </a>
         </p>
-      </FormContainer>
+      </div>
     </div>
   )
 }

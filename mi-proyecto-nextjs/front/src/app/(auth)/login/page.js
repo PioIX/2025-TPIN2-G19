@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Input from "@/components/Input"
-import Button from "@/components/Button"
-import FormContainer from "@/components/FormContainer"
-import "./login.styles.css"
+
+import styles from "./login.module.css"
 
 export default function LoginPage() {
   const [usuarios, setUsuarios] = useState([])
@@ -48,34 +46,39 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-container">
-      <FormContainer title="Iniciar Sesión">
-        <form onSubmit={handleLogin} className="login-form">
-          <Input
-            page="login"
-            placeholder="Usuario o correo electrónico"
+    <div className={styles.LoginContainer}>
+      <div className={styles.FormBox}>
+        <h2 className={styles.Title}>Iniciar sesión</h2>
+
+        <form onSubmit={handleLogin} className={styles.LoginForm}>
+          <input
+            type="text"
+            placeholder="Ingrese correo electrónico o nombre de usuario"
             value={loginInput}
             onChange={(e) => setLoginInput(e.target.value)}
+            className={styles.Input}
           />
-          <Input
-            page="login"
-            placeholder="Contraseña"
+          <input
             type="password"
+            placeholder="Ingrese contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className={styles.Input}
           />
-          <Button text="Entrar" type="submit" page="login" />
+          <button type="submit" className={styles.Button}>
+            Entrar
+          </button>
         </form>
 
-        {error && <p className="error">{error}</p>}
+        {error && <p className={styles.Error}>{error}</p>}
 
-        <p className="register-text">
-          ¿No tienes cuenta?{" "}
-          <a href="/register" className="link">
-            Regístrate aquí
+        <p className={styles.RegisterText}>
+          ¿No tenés cuenta?{" "}
+          <a href="/register" className={styles.Link}>
+            Registrate acá.
           </a>
         </p>
-      </FormContainer>
+      </div>
     </div>
   )
 }

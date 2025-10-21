@@ -1,0 +1,107 @@
+.boardContainer {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: #000;
+  color: white;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Lateral izquierdo */
+.sidebar {
+  width: 20%;
+  background-color: #1c1c1c;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 1rem;
+}
+
+.players {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  background-color: #b30000;
+  border-radius: 50%;
+}
+
+.accuseButton {
+  background-color: #d00000;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 1rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.accuseButton:hover {
+  background-color: #ff1a1a;
+}
+
+/* Tablero central */
+.board {
+  width: 60%;
+  background-color: #4a0000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tableroText {
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+/* Panel derecho */
+.notebook {
+  width: 20%;
+  background-color: #222;
+  padding: 1rem;
+}
+
+/* Modal de acusación */
+.accuseModal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(20, 20, 20, 0.95);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 0 20px #ff0000;
+  text-align: center;
+}
+
+.accuseModal select {
+  margin: 0.5rem 0;
+  padding: 0.7rem;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  width: 100%;
+}
+
+.confirmButton {
+  background-color: #ff0000;
+  border: none;
+  border-radius: 10px;
+  padding: 0.8rem 1.2rem;
+  margin-top: 1rem;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}

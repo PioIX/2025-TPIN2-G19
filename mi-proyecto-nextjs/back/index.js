@@ -230,7 +230,7 @@ app.delete('/eliminarCanciones', async function (req,res) {
 // -------------- aca comienza el proyecto del chat
 
 
-app.get('/usuarios', async function(req,res){
+app.get('/users', async function(req,res){
     try {
         console.log("Entre")
         const response = await realizarQuery(`
