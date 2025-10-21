@@ -2,38 +2,46 @@
 
 import React from "react"
 
-export default function Anotador (props) {
+
+const categorieSospechosos = ["Coronel Mostaza", "pepip", "asdasd"];
+const categoriesArmas = ["Coronel Mostaza", "pepip", "asdasd"];
+const categorieSHabitaciones = ["Coronel Mostaza", "pepip", "asdasd"];
+
+export default function Anotador() {
+
     <>
-        <h2>sospechosos</h2>
-        <p>Señorita Escarlata</p>
-        <select type="checkbox"></select>
-        <p>Señora Azulino</p>
-        <select type="checkbox"></select>
-        <p>Profesor Moradillo</p>
-        <select type="checkbox"></select>
-        <p>Señor Verdi</p>
-        <select type="checkbox"></select>
-        <p>Señora Blanco</p>
-        <select type="checkbox"></select>
-        <h2>armas</h2>
-        <p>Cuchillo</p>
-        <select type="checkbox"></select>
-        <p>Revólver</p>
-        <select type="checkbox"></select>
-        <p>Soga</p>
-        <select type="checkbox"></select>
-        <p>Llave inglesa</p>
-        <select type="checkbox"></select>
-        <p>Veneno</p>
-        <select type="checkbox"></select>
-        <h2>habitaciones</h2>
-        <p>Habitación</p>
-        <select type="checkbox"></select>
-        <p>Comedor</p>
-        <select type="checkbox"></select>
-        <p>Cocina</p>
-        <select type="checkbox"></select>
-        <p>Baño</p>
-        <select type="checkbox"></select>
+        <h1>Anotador</h1>
+        <h2>Sospechosos</h2>
+        {categorieSospechosos.map((categorie, index) => {
+            return <>
+                <div key={index}>
+                    <p>{categorie}</p>
+                    <input  key={index} type={"checkbox"}></input>
+                </div>
+
+            </>
+        })}
+
+        <h2>Armas</h2>
+        {categoriesArmas.map((categorie, index) => {
+            return <>
+                <div key={index}>
+                    <p>{categorie}</p>
+                    <input type={"checkbox"}></input>
+                </div>
+
+            </>
+        })}
+        <h2>Habitaciones</h2>
+        {categorieSHabitaciones.map((categorie, index) => {
+            return <>
+                <div key={index}>
+                    <p>{categorie}</p>
+                    <input type={"checkbox"}></input>
+                </div>
+
+            </>
+        })}
+
     </>
 }
