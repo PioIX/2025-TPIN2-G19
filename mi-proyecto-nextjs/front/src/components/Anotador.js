@@ -8,10 +8,30 @@ export default function Anotador (props) {
     const armas = ["Cuchillo", "Revólver", "Soga", "Llave inglesa", "Veneno"]
     const habitaciones = ["Habitación", "Comedor", "Cocina", "Baño"]
 
-    /*sospechosos.map( () => (sospechoso, index) {
-        <p>{sospechoso}</p>
-        <input key={index} type="checkbox"></input>
-    })*/
+
+    const listaAnotador = (array, nombre) => {
+        return array.map((elemento, index) => (
+            <div key={`${nombre}-${index}`}>
+            <p>{elemento}</p>
+            <input type="checkbox" />
+            </div>
+        ));
+    };
+
+    return (
+        <div>
+        <h2>Sospechosos</h2>
+        {generarLista(sospechosos, "sospechoso")}
+
+        <h2>Armas</h2>
+        {generarLista(armas, "arma")}
+
+        <h2>Habitaciones</h2>
+        {generarLista(habitaciones, "habitacion")}
+        </div>
+    );
+
+
 
     return<>
         <h2>sospechosos</h2>
