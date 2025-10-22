@@ -22,7 +22,7 @@ export default function Lobby() {
       return alert("Complete todos los campos para crear una sala.")
     try {
       // Luego conectarás con tu backend
-      const res = await fetch("http://localhost:3001/createroom", {
+      const res = await fetch("http://localhost:4000/createroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
