@@ -5,18 +5,19 @@ import { useRouter } from "next/navigation"
 import Button from "@/components/Button"
 import Input from "@/components/Input"
 import FormContainer from "@/components/FormContainer"
-import "./register.styles.css"
+import styles from "./register.module.css"
 
 export default function RegisterPage() {
-  const [usuarios, setUsuarios] = useState([])
-  const [nombre, setNombre] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [foto, setFoto] = useState("")
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const router = useRouter()
+  const [usuarios, setUsuarios] = useState([]) // Lista de usuarios para validar si el email ya existe
+  const [nombre, setNombre] = useState("") // Nombre de usuario
+  const [email, setEmail] = useState("") // Email del usuario
+  const [password, setPassword] = useState("") // Contraseña
+  const [foto, setFoto] = useState("") // Foto de perfil (opcional)
+  const [error, setError] = useState("") // Errores que se mostrarán al usuario
+  const [success, setSuccess] = useState("") // Mensaje de éxito al registrarse
+  const router = useRouter() // Para redirigir al login después del registro
 
+  // Obtener los usuarios existentes (si es necesario para validar si el email ya está en uso)
   useEffect(() => {
     async function obtenerUsuarios() {
       try {
@@ -33,35 +34,40 @@ export default function RegisterPage() {
     obtenerUsuarios()
   }, [])
 
+  // Función para registrar un nuevo usuario
   async function signUp(e) {
-    e.preventDefault()
-    setError("")
-    setSuccess("")
+    e.preventDefault() // Evitar que el formulario se envíe por defecto
+    setError("") // Limpiar cualquier error previo
+    setSuccess("") // Limpiar el mensaje de éxito previo
 
+    // Verificar si el email ya está registrado
     const existe = usuarios.some((u) => u.email === email)
     if (existe) {
       setError("Ese correo ya está registrado ⚠️")
       return
     }
 
+    // Crear un nuevo objeto de usuario
     const nuevoUsuario = {
       username: nombre,
       email,
-      password,
+      password, // En el backend deberías encriptar la contraseña
       photo: foto,
-      wins: 0,
+      wins: 0, // Inicialmente 0 victorias
+      admin: 0, // Por defecto, no es admin
     }
 
     try {
-      const res = await fetch("http://localhost:4000/users", {
+      // Enviar los datos al backend para registrar al usuario
+      const res = await fetch("http://localhost:4000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(nuevoUsuario),
       })
 
       if (res.ok) {
-        setSuccess("Registro exitoso ✅ Redirigiendo...")
-        setTimeout(() => router.push("/login"), 1500)
+        setSuccess("Registro exitoso ✅ Redirigiendo...") // Si se registra correctamente
+        setTimeout(() => router.push("/login"), 1500) // Redirigir al login
       } else {
         setError("Error al crear el usuario ❌")
       }
@@ -72,48 +78,53 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="auth-body">
-      <FormContainer title="Crear cuenta">
-        <form className="auth-form" onSubmit={signUp}>
-          <Input
-            page="register"
+    <div className={styles.RegisterContainer}>
+      <div className={styles.FormBox}>
+        <h2 className={styles.Title}>Crear cuenta</h2>
+
+        <form className={styles.RegisterForm} onSubmit={signUp}>
+          <input
+            className={styles.Input}
             placeholder="Nombre de usuario"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
           />
-          <Input
-            page="register"
+          <input
+            className={styles.Input}
             placeholder="Correo electrónico"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Input
-            page="register"
+          <input
+            className={styles.Input}
             placeholder="Contraseña"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Input
-            page="register"
+          <input
+            className={styles.Input}
             placeholder="URL de tu foto (opcional)"
             value={foto}
             onChange={(e) => setFoto(e.target.value)}
           />
-          <Button text="Registrarse" type="submit" page="register" />
+
+          <button type="submit" className={styles.Button}>
+            Registrarse
+          </button>
         </form>
 
-        {error && <p className="error">{error}</p>}
-        {success && <p className="success">{success}</p>}
+        {error && <p className={styles.Error}>{error}</p>} {/* Mostrar error si lo hay */}
+        {success && <p className={styles.Success}>{success}</p>} {/* Mostrar éxito si lo hay */}
 
-        <p className="change-link">
-          ¿Ya tienes cuenta?{" "}
-          <a href="/login" className="link">
-            Inicia sesión aquí
+        <p className={styles.ChangeLink}>
+          ¿Ya tenés cuenta?{" "}
+          <a href="/login" className={styles.Link}>
+            Iniciá sesión aquí
           </a>
         </p>
-      </FormContainer>
+      </div>
     </div>
   )
 }

@@ -1,0 +1,102 @@
+.RegisterContainer {
+  height: 100vh;
+  width: 100%;
+  background: url("/imagenes/fondo.png") center center/cover no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Poppins", sans-serif;
+  color: white;
+}
+
+.FormBox {
+  background-color: rgba(0, 0, 0, 0.85);
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.4);
+  text-align: center;
+  width: 90%;
+  max-width: 420px;
+  border: 2px solid #b30000;
+}
+
+.Title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1.8rem;
+}
+
+.RegisterForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.Input {
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #d00000;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.Input::placeholder {
+  color: white;
+  opacity: 0.9;
+}
+
+.Input:focus {
+  background-color: #ff1a1a;
+  transform: scale(1.03);
+}
+
+.Button {
+  width: 100%;
+  background-color: #d00000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.Button:hover {
+  background-color: #ff1a1a;
+  transform: scale(1.05);
+}
+
+.Error {
+  color: #ffcccc;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+.Success {
+  color: #dfffdf;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+.ChangeLink {
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.Link {
+  color: #fff;
+  text-decoration: underline;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.Link:hover {
+  color: #ff1a1a;
+}

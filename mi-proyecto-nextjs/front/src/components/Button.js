@@ -2,7 +2,7 @@
 
 import React from "react"
 import clsx from "clsx"
-import styles from "./Button.css"
+import styles from "./button.module.css"
 
 export default function Button({ text, onClick, page, type = "button", className }) {
   return (

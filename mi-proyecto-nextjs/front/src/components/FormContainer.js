@@ -2,7 +2,7 @@
 
 import React from "react"
 import clsx from "clsx"
-import styles from "./FormContainer.css"
+import styles from "./FormContainer.module.css"
 
 export default function FormContainer({ title, children, className }) {
   return (
