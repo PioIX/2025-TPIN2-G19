@@ -2,7 +2,6 @@
 
 import React from "react"
 
-
 const categorieSospechosos = ["Coronel Mostaza", "pepip", "asdasd"];
 const categoriesArmas = ["Coronel Mostaza", "pepip", "asdasd"];
 const categorieSHabitaciones = ["Coronel Mostaza", "pepip", "asdasd"];
@@ -43,5 +42,5 @@ export default function Anotador() {
             </>
         })}
 
-    </>
+</>
 }
