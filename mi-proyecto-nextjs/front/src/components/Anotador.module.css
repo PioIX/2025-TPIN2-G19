@@ -1,0 +1,14 @@
+.divPrincipal{
+    background-color: rgb(255, 234, 203);
+    max-width: fit-content;
+    padding: 2rem;
+    color: rgb(80, 80, 80);
+}
+
+.divPrincipal h2 {
+    color: rgb(56, 56, 56);
+}
+
+.divSospechosos, .divArmas, .divHabitaciones{
+    display: flex;
+}

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Anotador from "@/components/Anotador"
+import styles from "./page.module.css";
+import clsx from 'clsx';
 
 export default function Tablero() {
     const [users, setUsers] = useState([])
@@ -16,8 +19,10 @@ export default function Tablero() {
 
     return (
         <>
-            <h1>tablero</h1>
-            
+                <h1>tablero</h1>
+            <div className="{pagina-tablero}">
+                <Anotador></Anotador>
+            </div>
         </>
     )
 }
