@@ -63,9 +63,22 @@ app.get('/users', async function(req,res){
 
 app.get('/usersInRoom', async function(req,res){
     try {
-        console.log("Entre")
+        console.log("Entre2")
         const response = await realizarQuery(`
-            SELECT Users.username, Users.photo FROM Users INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId WHERE UsersXRooms.roomId = ${room}    
+            SELECT Users.username FROM Users INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
+        `)
+        res.send(response)
+        
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+app.get('/photoUsersInRoom', async function(req,res){
+    try {
+        console.log("Entre1")
+        const response = await realizarQuery(`
+            SELECT Users.photo FROM Users INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
         `)
         res.send(response)
         
