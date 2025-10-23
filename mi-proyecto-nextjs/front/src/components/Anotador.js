@@ -10,26 +10,28 @@ export default function Anotador (props) {
     const categorieHabitaciones  = ["Habitación", "Comedor", "Cocina", "Baño"]
 
 
-    return(
+    return (
     <>
         <div className={styles.divPrincipal}>
-            <h2>Sospechosos</h2>
-            {categorieSospechosos.map((categorie, index) => {
-                return <>
-                        <p>{categorie}</p>
-                    <div key={index} className={styles.divSospechosos}>
-                        <input key={index} type={"checkbox"}></input>
-                    </div>
+                <h2>Sospechosos</h2>
+            <div>
+                {categorieSospechosos.map((categorie, index) => {
+                    return <>
+                        <div key={index} className={styles.divSospechosos}>
+                            <p>{categorie}</p>
+                            <input key={index} type={"checkbox"}></input>
+                        </div>
 
-                </>
-                
-            })}
+                    </>
+                    
+                })}
+            </div>
 
             <h2>Armas</h2>
             {categorieArmas.map((categorie, index) => {
                 return <>
-                        <p>{categorie}</p>
                     <div key={index} className={styles.divArmas}>
+                        <p>{categorie}</p>
                         <input type={"checkbox"}></input>
                     </div>
 
@@ -39,8 +41,8 @@ export default function Anotador (props) {
             <h2>Habitaciones</h2>
             {categorieHabitaciones.map((categorie, index) => {
                 return <>
-                        <p>{categorie}</p>
                     <div key={index} className={styles.divHabitaciones}>
+                        <p>{categorie}</p>
                         <input type={"checkbox"}></input>
                     </div>
 
@@ -48,6 +50,6 @@ export default function Anotador (props) {
             })}
         </div>
 
-        </>
+    </>
     )
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Anotador from "@/components/Anotador"
+import Grilla from "@/components/Grilla"
 import styles from "./page.module.css";
 import clsx from 'clsx';
 
@@ -19,9 +20,9 @@ export default function Tablero() {
 
     return (
         <>
-                <h1>tablero</h1>
-            <div className="{pagina-tablero}">
+            <div className={styles["pagina-tablero"]}>
                 <Anotador></Anotador>
+                <Grilla></Grilla>
             </div>
         </>
     )

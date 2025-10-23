@@ -61,6 +61,19 @@ app.get('/users', async function(req,res){
     }
 })
 
+app.get('/usersInRoom', async function(req,res){
+    try {
+        console.log("Entre")
+        const response = await realizarQuery(`
+            SELECT Users.username, Users.photo FROM Users INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId WHERE UsersXRooms.roomId = ${room}    
+        `)
+        res.send(response)
+        
+    } catch (error) {
+        console.log(error)
+    }
+})
+
 io.on("connection", (socket) => {
     const req = socket.request;
     socket.on("joinRoom", (data) => {
