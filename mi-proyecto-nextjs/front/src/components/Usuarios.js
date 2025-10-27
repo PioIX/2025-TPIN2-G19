@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react";
+import styles from '@/components/usuarios.module.css'
 
 export default function Usuarios (props) {
 
