@@ -74,33 +74,7 @@ app.get('/usersInRoom', async function(req,res){
     }
 })
 
-io.on("connection", (socket) => {
-    const req = socket.request;
-    socket.on("joinRoom", (data) => {
-        if (req.session.room != undefined && req.session.room.length > 0)
-            socket.leave(req.session.room);
-            req.session.room = data.room;
-            socket.join(req.session.room);
-            console.log("🚀 ~ io.on ~ req.session.room:", req.session.room);
-            io.to(req.session.room).emit("chat-messages", {
-                user: req.session.user,
-                room: req.session.room,
-        });
-    });
-    socket.on("pingAll", (data) => {
-        console.log("PING ALL: ", data);
-        io.emit("pingAll", { event: "Ping to all", message: data });
-    });
-   socket.on("sendMessage", (data) => {
-        io.to(req.session.room).emit("newMessage", {
-            room: req.session.room,
-            message: data,
-        });
-    });
-    socket.on("disconnect", () => {
-        console.log("Disconnect");
-    });
-});
+
 app.post('/crearSala', async (req, res) => {
   const { nameRoom, adminId, players, rooms } = req.body; // Recibir datos desde el frontend
 
@@ -315,4 +289,32 @@ app.post('/joinroom', async (req, res) => {
   }
 });
 
+
+io.on("connection", (socket) => {
+    const req = socket.request;
+    socket.on("joinRoom", (data) => {
+        if (req.session.room != undefined && req.session.room.length > 0)
+            socket.leave(req.session.room);
+            req.session.room = data.room;
+            socket.join(req.session.room);
+            console.log("🚀 ~ io.on ~ req.session.room:", req.session.room);
+            io.to(req.session.room).emit("chat-messages", {
+                user: req.session.user,
+                room: req.session.room,
+        });
+    });
+    socket.on("pingAll", (data) => {
+        console.log("PING ALL: ", data);
+        io.emit("pingAll", { event: "Ping to all", message: data });
+    });
+   socket.on("sendMessage", (data) => {
+        io.to(req.session.room).emit("newMessage", {
+            room: req.session.room,
+            message: data,
+        });
+    });
+    socket.on("disconnect", () => {
+        console.log("Disconnect");
+    });
+});
 
