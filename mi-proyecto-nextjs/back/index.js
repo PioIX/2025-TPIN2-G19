@@ -324,6 +324,8 @@ app.post('/joinroom', async (req, res) => {
       SELECT * FROM UsersXRooms WHERE gameRoomId = ${joinCode} AND userId = ${playerId}
     `);
 
+    console.log("alreadyJoin: ", alreadyJoined)
+
     if (alreadyJoined.length > 0) {
       return res.status(400).send("Ya estás en esta sala");
     }
