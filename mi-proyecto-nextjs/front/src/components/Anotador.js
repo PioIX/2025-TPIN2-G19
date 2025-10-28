@@ -1,46 +1,61 @@
 "use client"
 
 import React from "react"
-
-const categorieSospechosos = ["Coronel Mostaza", "pepip", "asdasd"];
-const categoriesArmas = ["Coronel Mostaza", "pepip", "asdasd"];
-const categorieSHabitaciones = ["Coronel Mostaza", "pepip", "asdasd"];
+import styles from "./Anotador.module.css"  
 
 export default function Anotador() {
 
+    const categorieSospechosos = ["Señorita Escarlata", "Señora Azulino", "Profesor Moradillo", "Señor Verdi", "Señora Blanco"]
+    const categorieArmas  = ["Cuchillo", "Revólver", "Soga", "Llave inglesa", "Veneno"]
+    const categorieHabitaciones  = ["Habitación", "Comedor", "Cocina", "Baño"]
+
+
+    return (
     <>
-        <h1>Anotador</h1>
-        <h2>Sospechosos</h2>
-        {categorieSospechosos.map((categorie, index) => {
-            return <>
-                <div key={index}>
-                    <p>{categorie}</p>
-                    <input  key={index} type={"checkbox"}></input>
-                </div>
+        <div className={styles.divPrincipal}>       
+            <div className={styles.divSospechososContainer}>
+                <h2>Sospechosos</h2>
+                {categorieSospechosos.map((categorie, index) => {
+                    return <>
+                        <div key={index} className={styles.divSospechosos}>
+                            <p>{categorie}</p>
+                            <input key={index} type={"checkbox"}></input>
+                        </div>
 
-            </>
-        })}
+                    </>
+                    
+                })}
+            </div>
 
-        <h2>Armas</h2>
-        {categoriesArmas.map((categorie, index) => {
-            return <>
-                <div key={index}>
-                    <p>{categorie}</p>
-                    <input type={"checkbox"}></input>
-                </div>
+            <div className={styles.divArmasContainer}>
+                <h2>Armas</h2>
+                {categorieArmas.map((categorie, index) => {
+                return <>
+                    <div key={index} className={styles.divArmas}>
+                        <p>{categorie}</p>
+                        <input type={"checkbox"}></input>
+                    </div>
 
-            </>
-        })}
-        <h2>Habitaciones</h2>
-        {categorieSHabitaciones.map((categorie, index) => {
-            return <>
-                <div key={index}>
-                    <p>{categorie}</p>
-                    <input type={"checkbox"}></input>
-                </div>
+                </>
+            })}
+            </div>
 
-            </>
-        })}
+            <div className={styles.divHabitacionesContainer}>
+                <h2>Habitaciones</h2>
+                {categorieHabitaciones.map((categorie, index) => {
+                return <>
+                    <div key={index} className={styles.divHabitaciones}>
+                        <p>{categorie}</p>
+                        <input type={"checkbox"}></input>
+                    </div>
 
-</>
+                </>
+            })}
+            </div>
+   
+        </div>
+
+    </>
+    
+    )
 }

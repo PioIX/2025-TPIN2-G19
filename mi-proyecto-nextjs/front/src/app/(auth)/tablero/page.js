@@ -3,8 +3,12 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Button from "@/components/button"
-
 const tipo = "checkbox"
+import Anotador from "@/components/Anotador"
+import Grilla from "@/components/Grilla"
+import styles from "./page.module.css";
+import clsx from 'clsx';
+import Usuarios from "@/components/Usuarios"; 
 
 export default function Tablero() {
     const [users, setUsers] = useState([])
@@ -19,11 +23,11 @@ export default function Tablero() {
 
     return (
         <>
-
-            <h1>tablero</h1>
-
-
-            <Anotador />
+            <div className={styles["pagina-tablero"]}>
+                <Anotador></Anotador>
+                <Grilla></Grilla>
+                <Usuarios users={users}></Usuarios>
+            </div>
         </>
     )
 }

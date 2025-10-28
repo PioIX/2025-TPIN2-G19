@@ -1,0 +1,37 @@
+.tablero {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr); /* 12 columnas */
+  grid-template-rows: repeat(12, 1fr);    /* 12 filas */
+  width: 115vh;
+  height: 100vh;
+  margin: 0 auto; /* Centra el tablero */
+}
+
+.cuadrado {
+  background-color: #000000; /* Color de fondo */
+  width: 100%;
+  height: 100%;
+}
+
+.tunel {
+  background-color: white;
+  border: 2px solid #ae0000;
+}
+
+.salida {
+  display: grid;
+  background-color: white;
+  margin: 2px;
+  border: 2px solid black;
+}
+
+.habitacion {
+  background-color: #ae0000;
+}
+
+.casillaNormal {
+  display: grid;
+  background-color: black;
+  margin: 2px;
+}
+
