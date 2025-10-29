@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Button from "@/components/Button"
 import styles from "./lobby.module.css"
 
@@ -10,12 +10,16 @@ export default function Lobby() {
   const [joinCode, setJoinCode] = useState("")
   const [roomName, setRoomName] = useState("")
   const [playerCount, setPlayerCount] = useState("")
+  const userId = localStorage.getItem("userId")
+
+  useEffect( () => {
+    fetch(`http://localhost:4000/deleteUsersInRoom`)
+  }, [])
 
   const handleJoinRoom = async () => {
     if (!joinCode.trim()) return alert("Ingrese el código de sala.");
 
     try {
-      const userId = localStorage.getItem("userId")
       const res = await fetch("http://localhost:4000/joinroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

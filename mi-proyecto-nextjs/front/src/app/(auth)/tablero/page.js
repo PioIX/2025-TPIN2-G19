@@ -10,6 +10,8 @@ import Usuarios from "@/components/Usuarios";
 
 export default function Tablero() {
     const [users, setUsers] = useState([])
+    const [usersInRoom, setUsersInRoom] = useState([])
+    const [numeros, setNumeros] = useState([])
 
     async function obtenerUsuarios() {
         fetch ("http://localhost:4000/users")
@@ -17,6 +19,18 @@ export default function Tablero() {
         .then(result => {
             setUsers(result)
         })
+    }
+
+    async function obtenerUsuariosEnElRoom(params) {
+        fetch(`http://localhost:4000/usersInRoom`)
+        .then(response => response.json())
+        .then(result => {
+            setUsers(result)
+        })
+    }
+
+    async function ontenerNumeroAleatorio() {
+        usersInRoom.map((user, index), numero => Math.floor(Math.random()))
     }
 
     return (

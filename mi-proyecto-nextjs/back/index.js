@@ -65,10 +65,13 @@ app.get('/usersInRoom', async function(req,res){
     try {
         console.log("Entre2")
         const response = await realizarQuery(`
-            SELECT Users.username FROM Users INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
+            SELECT DISTINCT Users.username
+            FROM Users
+            INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
+            WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
         `)
+        console.log(response)
         res.send(response)
-        
     } catch (error) {
         console.log(error)
     }
@@ -86,6 +89,20 @@ app.get('/photoUsersInRoom', async function(req,res){
         console.log(error)
     }
 })
+
+app.delete('/deleteUsersInRoom', async function (req,res) {
+  try {
+    const response = await realizarQuery(`
+      DELETE FROM UsersXRooms WHERE userId = ${req.body.userId}  
+    `)
+    res.send(response)
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+// SOCKET
+
 
 io.on("connection", (socket) => {
     const req = socket.request;
@@ -320,7 +337,7 @@ app.post('/joinroom', async (req, res) => {
     const currentPlayers = playersResponse[0].count;
 
     // Verificar que el jugador no esté ya en la sala
-    const alreadyJoined = await realizarQuery(`
+    /*const alreadyJoined = await realizarQuery(`
       SELECT * FROM UsersXRooms WHERE gameRoomId = ${joinCode} AND userId = ${playerId}
     `);
 
@@ -328,7 +345,7 @@ app.post('/joinroom', async (req, res) => {
 
     if (alreadyJoined.length > 0) {
       return res.status(400).send("Ya estás en esta sala");
-    }
+    }*/
 
     // Insertar al jugador en la tabla relacional
     await realizarQuery(`
