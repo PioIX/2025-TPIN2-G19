@@ -1,7 +1,6 @@
 "use client"
 import { useState } from "react"
 import styles from "./gameboard.module.css"
-import { socket } from "@/utils/socket"
 
 export default function GameBoard() {
   const [showAccusation, setShowAccusation] = useState(false)
