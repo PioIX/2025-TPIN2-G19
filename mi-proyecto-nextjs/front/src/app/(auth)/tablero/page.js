@@ -6,6 +6,7 @@ import Anotador from "@/components/Anotador"
 import Grilla from "@/components/Grilla"
 import styles from "./page.module.css";
 import clsx from 'clsx';
+import Usuarios from "@/components/Usuarios"; 
 
 export default function Tablero() {
     const [usersInRoom, setUsersInRoom] = useState([])
@@ -30,6 +31,7 @@ export default function Tablero() {
                 <Anotador></Anotador>
                 <Grilla></Grilla>
                 <button onClick={obtenerNumeroAleatorio}>aaaa</button>
+                <Usuarios users={users}></Usuarios>
             </div>
         </>
     )

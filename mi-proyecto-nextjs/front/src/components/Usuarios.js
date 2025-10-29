@@ -3,7 +3,7 @@
 import React from "react"
 import styles from "./Anotador.module.css"
 
-export default function Anotador (props) {
+export default function Usuarios(props) {
 
     const users = []
 
