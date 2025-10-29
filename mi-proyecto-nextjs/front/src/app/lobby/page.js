@@ -1,15 +1,52 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useEffect } from "react"
 import Button from "@/components/Button"
 import styles from "./lobby.module.css"
 
 export default function Lobby() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [joinCode, setJoinCode] = useState("")
   const [roomName, setRoomName] = useState("")
   const [playerCount, setPlayerCount] = useState("")
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userId = searchParams.get('user_id')
+        console.log("User ID desde URL:", userId)
+        
+        if (!userId) {
+          console.error("No se encontró user_id en la URL")
+          setLoading(false)
+          return
+        }
+
+        // Llamar DIRECTAMENTE al backend Node.js
+        const res = await fetch(`http://localhost:4000/user/${userId}`)
+        console.log("Respuesta del backend:", res.status)
+        
+        if (res.ok) {
+          const data = await res.json()
+          console.log("✅ Usuario obtenido del backend:", data)
+          console.log("✅ Admin value:", data.admin, "Type:", typeof data.admin)
+          setUser(data)
+        } else {
+          console.error("❌ Error al obtener usuario:", res.status)
+        }
+      } catch (error) {
+        console.error("💥 Error en la llamada al backend:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [searchParams])
 
   const handleJoinRoom = () => {
     if (!joinCode.trim()) return alert("Ingrese un código para unirse.")
@@ -40,10 +77,16 @@ export default function Lobby() {
     }
   }
 
-  // Función para redirigir al Admin Panel
   const handleGoToAdminPanel = () => {
-    router.push("/adminpanel"); // Redirige a la página de admin panel
+    router.push("/adminpanel")
   }
+
+  // Verificar si es admin - aceptar 1, "1", true, o cualquier valor truthy
+  const isAdmin = user && (user.admin === 1 || user.admin === "1" || user.admin === true || user.admin > 0)
+
+  console.log("🎯 Estado del usuario completo:", user)
+  console.log("🎯 Valor de admin:", user?.admin)
+  console.log("🎯 ¿Es admin?:", isAdmin)
 
   return (
     <div className={styles.lobbyContainer}>
@@ -84,10 +127,12 @@ export default function Lobby() {
           <Button text="Crear" onClick={handleCreateRoom} page="lobby" />
         </div>
 
-        {/* Botón para ir al Admin Panel */}
-        <div className={styles.inputGroup}>
-          <Button text="Ir al Panel Admin" onClick={handleGoToAdminPanel} page="lobby" />
-        </div>
+        {/* Mostrar botón de admin */}
+        {!loading && isAdmin && (
+          <div className={styles.inputGroup}>
+            <Button text="Panel Admin" onClick={handleGoToAdminPanel} page="lobby" />
+          </div>
+        )}
       </div>
     </div>
   )
