@@ -13,7 +13,6 @@ export default function Lobby() {
 
   const handleJoinRoom = () => {
     if (!joinCode.trim()) return alert("Ingrese un código para unirse.")
-    // Aquí harías un fetch al backend para validar el código y entrar
     router.push(`/game/${joinCode}`)
   }
 
@@ -21,7 +20,6 @@ export default function Lobby() {
     if (!roomName.trim() || !playerCount)
       return alert("Complete todos los campos para crear una sala.")
     try {
-      // Luego conectarás con tu backend
       const res = await fetch("http://localhost:4000/createroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,6 +38,11 @@ export default function Lobby() {
       console.error(error)
       alert("No se pudo crear la sala.")
     }
+  }
+
+  // Función para redirigir al Admin Panel
+  const handleGoToAdminPanel = () => {
+    router.push("/adminpanel"); // Redirige a la página de admin panel
   }
 
   return (
@@ -79,6 +82,11 @@ export default function Lobby() {
             <option value="5">5 jugadores</option>
           </select>
           <Button text="Crear" onClick={handleCreateRoom} page="lobby" />
+        </div>
+
+        {/* Botón para ir al Admin Panel */}
+        <div className={styles.inputGroup}>
+          <Button text="Ir al Panel Admin" onClick={handleGoToAdminPanel} page="lobby" />
         </div>
       </div>
     </div>
