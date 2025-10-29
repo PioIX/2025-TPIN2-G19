@@ -16,6 +16,9 @@
 .tunel {
   background-color: white;
   border: 2px solid #ae0000;
+  color:black;
+  align-content: center;
+  
 }
 
 .salida {
@@ -23,6 +26,9 @@
   background-color: white;
   margin: 2px;
   border: 2px solid black;
+  color: black;
+  align-items: center;
+
 }
 
 .habitacion {
