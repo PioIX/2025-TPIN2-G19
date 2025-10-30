@@ -13,87 +13,115 @@ export default function Lobby() {
   const [playerCount, setPlayerCount] = useState("")
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [createdRoomCode, setCreatedRoomCode] = useState("") // Para mostrar el código generado
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const userId = searchParams.get('user_id')
-        console.log("User ID desde URL:", userId)
+        const userId = searchParams.get('user_id') || sessionStorage.getItem("userId")
+        console.log("User ID:", userId)
         
         if (!userId) {
-          console.error("No se encontró user_id en la URL")
-          setLoading(false)
+          console.error("No se encontró user_id")
+          router.push("/login")
           return
         }
 
-        // Llamar DIRECTAMENTE al backend Node.js
         const res = await fetch(`http://localhost:4000/user/${userId}`)
-        console.log("Respuesta del backend:", res.status)
         
         if (res.ok) {
           const data = await res.json()
-          console.log("✅ Usuario obtenido del backend:", data)
-          console.log("✅ Admin value:", data.admin, "Type:", typeof data.admin)
+          console.log("✅ Usuario obtenido:", data)
           setUser(data)
+          sessionStorage.setItem("userId", userId)
         } else {
           console.error("❌ Error al obtener usuario:", res.status)
+          router.push("/login")
         }
       } catch (error) {
-        console.error("💥 Error en la llamada al backend:", error)
+        console.error("💥 Error:", error)
+        router.push("/login")
       } finally {
         setLoading(false)
       }
     }
 
     fetchUser()
-  }, [searchParams])
+  }, [searchParams, router])
 
-  /*const handleJoinRoom = () => {
-    if (!joinCode.trim()) return alert("Ingrese un código para unirse.")
-    router.push(`/game/${joinCode}`)
-  }*/
-
-  const userId = localStorage.getItem("userId")
-
-  useEffect( () => {
-    fetch(`http://localhost:4000/deleteUsersInRoom`)
+  // Limpiar usuarios de salas anteriores al cargar
+  useEffect(() => {
+    const userId = sessionStorage.getItem("userId")
+    if (userId) {
+      fetch("http://localhost:4000/deleteUsersInRoom", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId })
+      }).catch(err => console.error("Error al limpiar sala anterior:", err))
+    }
   }, [])
 
   const handleJoinRoom = async () => {
-    if (!joinCode.trim()) return alert("Ingrese el código de sala.");
+    setError("")
+    setSuccess("")
+    
+    if (!joinCode.trim()) {
+      setError("Ingrese el código de sala")
+      return
+    }
+
+    // Validar que sea un código de 4 dígitos
+    if (!/^\d{4}$/.test(joinCode)) {
+      setError("El código debe ser de 4 dígitos")
+      return
+    }
 
     try {
+      const userId = sessionStorage.getItem("userId")
+      
       const res = await fetch("http://localhost:4000/joinroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          joinCode: joinCode, // ID o código de la sala
-          playerId: userId, // el ID del usuario actual (igual que admin en create)
+          joinCode: joinCode,
+          playerId: userId,
         }),
-      });
+      })
+
+      const data = await res.json()
 
       if (!res.ok) {
-        const errText = await res.text();
-        console.error("Error al unirse a la sala:", errText);
-        return alert(errText || "Error al unirse a la sala.");
+        setError(data.error || "Error al unirse a la sala")
+        return
       }
 
-      const { roomId } = await res.json();
-      localStorage.setItem("gameRoomId", roomId);
-      router.push(`/tablero`);
+      sessionStorage.setItem("gameRoomId", data.roomId)
+      setSuccess(`¡Unido a la sala "${data.roomName}"!`)
+      
+      setTimeout(() => {
+        router.push(`/tablero`)
+      }, 1500)
 
     } catch (error) {
-      console.error("Error de red:", error);
-      alert("No se pudo conectar con el servidor.");
+      console.error("Error de red:", error)
+      setError("No se pudo conectar con el servidor")
     }
-  };
+  }
 
   const handleCreateRoom = async () => {
-    if (!roomName.trim() || !playerCount)
-      return alert("Complete todos los campos para crear una sala.");
+    setError("")
+    setSuccess("")
+    
+    if (!roomName.trim() || !playerCount) {
+      setError("Complete todos los campos para crear una sala")
+      return
+    }
 
     try {
-      const userId = localStorage.getItem("userId")
+      const userId = sessionStorage.getItem("userId")
+      
       const res = await fetch("http://localhost:4000/createroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -102,34 +130,38 @@ export default function Lobby() {
           players: playerCount,
           admin: userId,
         }),
-      });
+      })
+
+      const data = await res.json()
 
       if (!res.ok) {
-        const errText = await res.text();
-        console.error("Error al crear sala:", errText);
-        return alert("Error al crear la sala.");
+        setError(data.error || "Error al crear la sala")
+        return
       }
 
-      const { roomId } = await res.json();
-      localStorage.setItem("gameRoomId", roomId);
-      router.push(`/tablero`);
-    } catch (error) {
-      console.error("Error de red:", error);
-      alert("No se pudo conectar con el servidor.");
-    }
-  };
+      sessionStorage.setItem("gameRoomId", data.roomId)
+      setCreatedRoomCode(data.joinCode) // Mostrar el código generado
+      setSuccess(`¡Sala creada! Código: ${data.joinCode}`)
+      
+      setTimeout(() => {
+        router.push(`/tablero`)
+      }, 3000)
 
+    } catch (error) {
+      console.error("Error de red:", error)
+      setError("No se pudo conectar con el servidor")
+    }
+  }
 
   const handleGoToAdminPanel = () => {
     router.push("/adminpanel")
   }
 
-  // Verificar si es admin - aceptar 1, "1", true, o cualquier valor truthy
   const isAdmin = user && (user.admin === 1 || user.admin === "1" || user.admin === true || user.admin > 0)
 
-  console.log("🎯 Estado del usuario completo:", user)
-  console.log("🎯 Valor de admin:", user?.admin)
-  console.log("🎯 ¿Es admin?:", isAdmin)
+  if (loading) {
+    return <div className={styles.lobbyContainer}>Cargando...</div>
+  }
 
   return (
     <div className={styles.lobbyContainer}>
@@ -138,10 +170,11 @@ export default function Lobby() {
         <div className={styles.inputGroup}>
           <input
             type="text"
-            placeholder="Ingrese el código"
+            placeholder="Código de 4 dígitos"
             value={joinCode}
-            onChange={(e) => setJoinCode(e.target.value)}
+            onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
             className={styles.input}
+            maxLength={4}
           />
           <Button text="Unirse" onClick={handleJoinRoom} page="lobby" />
         </div>
@@ -150,7 +183,7 @@ export default function Lobby() {
         <div className={styles.inputGroup}>
           <input
             type="text"
-            placeholder="Nombre"
+            placeholder="Nombre de la sala"
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
             className={styles.input}
@@ -169,8 +202,21 @@ export default function Lobby() {
           <Button text="Crear" onClick={handleCreateRoom} page="lobby" />
         </div>
 
-        {/* Mostrar botón de admin */}
-        {!loading && isAdmin && (
+        {/* Mostrar código de sala creada */}
+        {createdRoomCode && (
+          <div className={styles.roomCode}>
+            <h3>Código de tu sala:</h3>
+            <p className={styles.code}>{createdRoomCode}</p>
+            <small>Compartí este código con tus amigos para que se unan</small>
+          </div>
+        )}
+
+        {/* Mensajes de error y éxito */}
+        {error && <p className={styles.error}>{error}</p>}
+        {success && <p className={styles.success}>{success}</p>}
+
+        {/* Botón de admin */}
+        {isAdmin && (
           <div className={styles.inputGroup}>
             <Button text="Panel Admin" onClick={handleGoToAdminPanel} page="lobby" />
           </div>
