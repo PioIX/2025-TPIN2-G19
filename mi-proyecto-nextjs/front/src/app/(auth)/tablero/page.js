@@ -7,11 +7,21 @@ import Grilla from "@/components/Grilla"
 import styles from "./page.module.css";
 import clsx from 'clsx';
 import Usuarios from "@/components/Usuarios"; 
+//import {Card} from "Card.js"
+
 
 export default function Tablero() {
     const [usersInRoom, setUsersInRoom] = useState([])
     //const [numeroObtenido, setNumeroObtenido] = useState(0)
     let numeroObtenido=0
+
+    
+    useEffect(()=> {
+        fetch('http://localhost:4000/usersInRoom')
+        .then(response => response.json)
+        .then(data => setUsersInRoom(data))
+        .then(console.log("usersInRoom: ", usersInRoom))
+    }, [usersInRoom])
 
     function getRandomIntInclusive(min, max) {
         min = Math.ceil(min)
@@ -23,7 +33,10 @@ export default function Tablero() {
         numeroObtenido = getRandomIntInclusive(1, 6)
         console.log(numeroObtenido)
     }
+    
+    function repartirCartas() {
 
+    }
 
     return (
         <>
@@ -31,7 +44,7 @@ export default function Tablero() {
                 <Anotador></Anotador>
                 <Grilla></Grilla>
                 <button onClick={obtenerNumeroAleatorio}>aaaa</button>
-                <Usuarios users={users}></Usuarios>
+                {/*<Usuarios users={users}></Usuarios>*/}
             </div>
         </>
     )

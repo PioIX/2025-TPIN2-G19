@@ -15,7 +15,7 @@ export default function Button({ text, onClick, page, type = "button", className
       )}
       onClick={onClick}
     >
-      {props.text}
+      {text}
     </button>
   )
 }
