@@ -48,34 +48,77 @@ export default function Lobby() {
     fetchUser()
   }, [searchParams])
 
-  const handleJoinRoom = () => {
+  /*const handleJoinRoom = () => {
     if (!joinCode.trim()) return alert("Ingrese un código para unirse.")
     router.push(`/game/${joinCode}`)
-  }
+  }*/
+
+  const userId = localStorage.getItem("userId")
+
+  useEffect( () => {
+    fetch(`http://localhost:4000/deleteUsersInRoom`)
+  }, [])
+
+  const handleJoinRoom = async () => {
+    if (!joinCode.trim()) return alert("Ingrese el código de sala.");
+
+    try {
+      const res = await fetch("http://localhost:4000/joinroom", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          joinCode: joinCode, // ID o código de la sala
+          playerId: userId, // el ID del usuario actual (igual que admin en create)
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Error al unirse a la sala:", errText);
+        return alert(errText || "Error al unirse a la sala.");
+      }
+
+      const { roomId } = await res.json();
+      localStorage.setItem("gameRoomId", roomId);
+      router.push(`/tablero`);
+
+    } catch (error) {
+      console.error("Error de red:", error);
+      alert("No se pudo conectar con el servidor.");
+    }
+  };
 
   const handleCreateRoom = async () => {
     if (!roomName.trim() || !playerCount)
-      return alert("Complete todos los campos para crear una sala.")
+      return alert("Complete todos los campos para crear una sala.");
+
     try {
+      const userId = localStorage.getItem("userId")
       const res = await fetch("http://localhost:4000/createroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: roomName,
-          cant_players: Number(playerCount),
+          players: playerCount,
+          admin: userId,
         }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        router.push(`/game/${data.roomId}`)
-      } else {
-        alert("Error al crear la sala.")
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Error al crear sala:", errText);
+        return alert("Error al crear la sala.");
       }
+
+      const { roomId } = await res.json();
+      localStorage.setItem("gameRoomId", roomId);
+      router.push(`/tablero`);
     } catch (error) {
-      console.error(error)
-      alert("No se pudo crear la sala.")
+      console.error("Error de red:", error);
+      alert("No se pudo conectar con el servidor.");
     }
-  }
+  };
+
 
   const handleGoToAdminPanel = () => {
     router.push("/adminpanel")
@@ -122,7 +165,6 @@ export default function Lobby() {
             <option value="">Cantidad de jugadores</option>
             <option value="3">3 jugadores</option>
             <option value="4">4 jugadores</option>
-            <option value="5">5 jugadores</option>
           </select>
           <Button text="Crear" onClick={handleCreateRoom} page="lobby" />
         </div>
