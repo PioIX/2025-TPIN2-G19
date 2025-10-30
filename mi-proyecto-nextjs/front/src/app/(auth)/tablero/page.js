@@ -7,7 +7,8 @@ import Grilla from "@/components/Grilla"
 import styles from "./page.module.css";
 import clsx from 'clsx';
 import Usuarios from "@/components/Usuarios"; 
-//import {Card} from "Card.js"
+import { cardsCharacters, cardsWeapons, cardsRooms } from "/classes/Card.js";
+
 
 
 export default function Tablero() {
@@ -34,8 +35,22 @@ export default function Tablero() {
         console.log(numeroObtenido)
     }
     
-    function repartirCartas() {
+    function repartirCartas(cardsCharacters, cardsWeapons, cardsRooms, usersInRoom) {
+        const cartasDisponiblesCharacters = [cardsCharacters]
+        const cartasDisponiblesWeapons = [cardsWeapons]
+        const cartasDisponiblesRooms = [cardsRooms]
 
+        for (let i=cartasDisponiblesCharacters.length-1; i>0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cartasDisponiblesCharacters[i], cartasDisponiblesCharacters[j]] = [cartasDisponiblesCharacters[j], cartasDisponiblesCharacters[i]];
+        }
+
+        const asignaciones = usersInRoom.map((user,i) => ({
+            user, 
+            carta:cartasDisponiblesCharacters[i]
+        }))
+
+        return asignaciones;
     }
 
     return (
@@ -43,7 +58,8 @@ export default function Tablero() {
             <div className={styles["pagina-tablero"]}>
                 <Anotador></Anotador>
                 <Grilla></Grilla>
-                <button onClick={obtenerNumeroAleatorio}>aaaa</button>
+                <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
+                <button onClick={repartirCartas}>repartir cartas</button>
                 {/*<Usuarios users={users}></Usuarios>*/}
             </div>
         </>

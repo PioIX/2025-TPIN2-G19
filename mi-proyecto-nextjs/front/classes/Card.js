@@ -5,11 +5,11 @@ class CardCharacter {
 }
 
 const cardsCharacters=[]
-cardsCharacters.push(new Card("Señorita Escarlata"))
-cardsCharacters.push(new Card("Señora Azulino"))
-cardsCharacters.push(new Card ("Profesor Moradillo"))
-cardsCharacters.push(new Card("Señor Verdi"))
-cardsCharacters.push(new Card("Señora Blanco"))
+cardsCharacters.push(new CardCharacter("Señorita Escarlata"))
+cardsCharacters.push(new CardCharacter("Señora Azulino"))
+cardsCharacters.push(new CardCharacter ("Profesor Moradillo"))
+cardsCharacters.push(new CardCharacter("Señor Verdi"))
+cardsCharacters.push(new CardCharacter("Señora Blanco"))
 
 
 class CardWeapons {
@@ -20,11 +20,11 @@ class CardWeapons {
 
 
 const cardsWeapons=[]
-cardsWeapons.push(new Card("Cuchillo"))
-cardsWeapons.push(new Card("Revólver"))
-cardsWeapons.push(new Card("Soga"))
-cardsWeapons.push(new Card("Llave inglesa"))
-cardsWeapons.push(new Card("Veneno"))
+cardsWeapons.push(new CardWeapons("Cuchillo"))
+cardsWeapons.push(new CardWeapons("Revólver"))
+cardsWeapons.push(new CardWeapons("Soga"))
+cardsWeapons.push(new CardWeapons("Llave inglesa"))
+cardsWeapons.push(new CardWeapons("Veneno"))
 
 
 class CardRooms {
@@ -34,7 +34,7 @@ class CardRooms {
 }
 
 const cardsRooms=[]
-cardsRooms.push=(new Card("Habitación"))
-cardsRooms.push=(new Card("Comedor"))
-cardsRooms.push=(new Card("Cocina"))
-cardsRooms.push=(new Card("Baño"))
+cardsRooms.push=(new CardRooms("Habitación"))
+cardsRooms.push=(new CardRooms("Comedor"))
+cardsRooms.push=(new CardRooms("Cocina"))
+cardsRooms.push=(new CardRooms("Baño"))

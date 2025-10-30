@@ -14,7 +14,7 @@ export default function Lobby() {
   const handleJoinRoom = () => {
     if (!joinCode.trim()) return alert("Ingrese un código para unirse.")
     // Aquí harías un fetch al backend para validar el código y entrar
-    router.push(`/game/${joinCode}`)
+    router.push(`/tablero`)
   }
 
   const handleCreateRoom = async () => {
@@ -32,7 +32,7 @@ export default function Lobby() {
       })
       if (res.ok) {
         const data = await res.json()
-        router.push(`/game/${data.roomId}`)
+        router.push(`/tablero`)
       } else {
         alert("Error al crear la sala.")
       }
