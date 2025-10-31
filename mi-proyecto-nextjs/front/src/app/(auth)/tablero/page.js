@@ -16,6 +16,7 @@ export default function Tablero() {
     //const [numeroObtenido, setNumeroObtenido] = useState(0)
     let numeroObtenido=0
 
+
     
     useEffect(()=> {
         fetch('http://localhost:4000/usersInRoom')
@@ -54,6 +55,18 @@ export default function Tablero() {
         return asignaciones;
     }
 
+    async function obtenerUsuariosEnElRoom(params) {
+        fetch(`http://localhost:4000/usersInRoom`)
+        .then(response => response.json())
+        .then(result => {
+            setUsers(result)
+        })
+    }
+
+    async function ontenerNumeroAleatorio() {
+        usersInRoom.map((user, index), numero => Math.floor(Math.random()))
+    }
+
     return (
         <>
             <div className={styles["pagina-tablero"]}>
@@ -62,6 +75,7 @@ export default function Tablero() {
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
                 {/*<Usuarios users={users}></Usuarios>*/}
+
             </div>
         </>
     )

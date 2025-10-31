@@ -51,6 +51,7 @@ export default function LoginPage() {
       if (response.ok) {
         // Si el login es exitoso, redirigimos al usuario
         router.push(`/lobby?user_id=${data.userId}`) // Cambiar 'userId' por el nombre de campo adecuado
+        localStorage.setItem("userId", data.userId);
       } else {
         setError(data.mensaje || "Usuario o contraseña incorrectos ❌") // Mostrar error
       }
