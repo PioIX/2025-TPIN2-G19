@@ -12,32 +12,36 @@ export default function Lobby() {
   const [playerCount, setPlayerCount] = useState("")
   const userId = localStorage.getItem("userId")
 
-  useEffect( () => {
+  /*useEffect( () => {
     fetch(`http://localhost:4000/deleteUsersInRoom`)
-  }, [])
+  }, [])*/
 
   const handleJoinRoom = async () => {
     if (!joinCode.trim()) return alert("Ingrese el código de sala.");
 
     try {
-      const res = await fetch("http://localhost:4000/joinroom", {
+      fetch("http://localhost:4000/joinroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           joinCode: joinCode, // ID o código de la sala
           playerId: userId, // el ID del usuario actual (igual que admin en create)
         }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('datos: ', data)
+        const {roomId} = data
+        localStorage.setItem("roomId", roomId)
+        console.log("roomId: ", roomId)
+        router.push(`/tablero`);
       });
 
-      if (!res.ok) {
-        const errText = await res.text();
+      /*if (!res.ok) {
+        const errText = res.text();
         console.error("Error al unirse a la sala:", errText);
         return alert(errText || "Error al unirse a la sala.");
-      }
-
-      const { roomId } = await res.json();
-      localStorage.setItem("gameRoomId", roomId);
-      router.push(`/tablero`);
+      }*/
 
     } catch (error) {
       console.error("Error de red:", error);
@@ -69,7 +73,7 @@ export default function Lobby() {
       }
 
       const { roomId } = await res.json();
-      localStorage.setItem("gameRoomId", roomId);
+      localStorage.setItem("roomId", roomId);
       router.push(`/tablero`);
     } catch (error) {
       console.error("Error de red:", error);

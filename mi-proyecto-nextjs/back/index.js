@@ -63,14 +63,14 @@ app.get('/users', async function(req,res){
 
 app.get('/usersInRoom', async function(req,res){
     try {
-        console.log("Entre2")
+        console.log("USERS IN ROOM")
         const response = await realizarQuery(`
             SELECT DISTINCT Users.username
             FROM Users
-            INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
-            WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
+            INNER JOIN UsersXRooms ON UsersXRooms.userId = Users.userId
+            WHERE UsersXRooms.gameRoomId = ${req.body.roomId};
         `)
-        console.log(response)
+        console.log("RESPONSE: ", response)
         res.send(response)
     } catch (error) {
         console.log(error)
@@ -316,6 +316,7 @@ app.post('/createroom', async (req, res) => {
 
 app.post('/joinroom', async (req, res) => {
   const { joinCode, playerId } = req.body; // joinCode = gameRoomId
+  console.log(joinCode, playerId)
 
   try {
     // Verificar que la sala existe
@@ -323,7 +324,7 @@ app.post('/joinroom', async (req, res) => {
       SELECT * FROM GameRooms WHERE gameRoomId = ${joinCode}
     `);
 
-    if (roomResponse.length === 0) {
+    if (roomResponse.length< 0) {
       return res.status(404).send("Sala no encontrada");
     }
 

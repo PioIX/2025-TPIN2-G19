@@ -15,8 +15,6 @@ export default function Tablero() {
     const [usersInRoom, setUsersInRoom] = useState([])
     //const [numeroObtenido, setNumeroObtenido] = useState(0)
     let numeroObtenido=0
-
-
     
     useEffect(()=> {
         fetch('http://localhost:4000/usersInRoom')
