@@ -112,6 +112,42 @@ app.post('/createroom', async (req, res) => {
 
 
 
+// Agregar este endpoint nuevo
+app.get('/room/:gameRoomId', async (req, res) => {
+  const { gameRoomId } = req.params;
+  
+  try {
+    const room = await realizarQuery(`
+      SELECT * FROM GameRooms WHERE gameRoomId = ${gameRoomId}
+    `);
+    
+    if (room.length === 0) {
+      return res.status(404).json({ error: "Sala no encontrada" });
+    }
+    
+    res.json(room[0]);
+  } catch (error) {
+    console.error("Error al obtener sala:", error);
+    res.status(500).json({ error: "Error al obtener la sala" });
+  }
+});
+
+// Modificar el endpoint usersInRoom para devolver más datos
+app.get('/usersInRoom', async function(req,res){
+    try {
+        const response = await realizarQuery(`
+            SELECT Users.userId, Users.username, Users.photo
+            FROM Users
+            INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
+            WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
+        `)
+        res.send(response)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: "Error al obtener usuarios" })
+    }
+})
+
 // Endpoint para obtener usuario por ID
 app.get('/user/:id', async (req, res) => {
   try {
@@ -603,6 +639,41 @@ app.post('/joinroom', async (req, res) => {
     console.error("Error al unirse a la sala:", error);
     res.status(500).send("Error al unirse a la sala");
   }
+});
+
+io.on("connection", (socket) => {
+    const req = socket.request;
+    
+    socket.on("joinRoom", (data) => {
+        if (req.session.room != undefined && req.session.room.length > 0) {
+            socket.leave(req.session.room);
+        }
+        req.session.room = data.room;
+        socket.join(req.session.room);
+        console.log("🚪 Usuario se unió a la sala:", req.session.room);
+        
+        // Notificar a todos en la sala que un jugador se unió
+        io.to(req.session.room).emit("playerJoined", {
+            room: req.session.room,
+            timestamp: new Date()
+        });
+    });
+
+    socket.on("startGame", (data) => {
+        console.log("🎮 Iniciando juego en sala:", data.room);
+        io.to(data.room).emit("gameStarted", { room: data.room });
+    });
+
+    socket.on("sendMessage", (data) => {
+        io.to(req.session.room).emit("newMessage", {
+            room: req.session.room,
+            message: data,
+        });
+    });
+
+    socket.on("disconnect", () => {
+        console.log("👋 Usuario desconectado");
+    });
 });
 
 
