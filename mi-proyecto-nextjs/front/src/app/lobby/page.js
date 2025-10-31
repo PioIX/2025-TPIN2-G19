@@ -95,7 +95,7 @@ export default function Lobby() {
       setSuccess(`¡Uniéndose a "${data.roomName}"!`)
       
       setTimeout(() => {
-        router.push(`/waitingroom`)
+        router.push("/waitingroom")
       }, 1000)
 
     } catch (error) {

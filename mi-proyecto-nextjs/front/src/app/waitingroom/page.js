@@ -173,7 +173,6 @@ export default function WaitingRoom() {
                       <img 
                         src={player.photo || "/default-avatar.png"} 
                         alt={player.username}
-                        onError={(e) => e.target.src = "/default-avatar.png"}
                       />
                     </div>
                     <p className={styles.playerName}>{player.username}</p>
