@@ -47,7 +47,8 @@ export default function Tablero() {
 
         const asignaciones = usersInRoom.map((user,i) => ({
             user, 
-            carta:cartasDisponiblesCharacters[i]
+            carta:cartasDisponiblesCharacters[i],
+            key:i 
         }))
 
         return asignaciones;
