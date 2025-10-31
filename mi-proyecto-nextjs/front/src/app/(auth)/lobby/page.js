@@ -102,6 +102,7 @@ export default function Lobby() {
           players: playerCount,
           admin: userId,
         }),
+
       });
 
       if (!res.ok) {

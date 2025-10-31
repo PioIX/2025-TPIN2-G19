@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import styles from "./Anotador.module.css"
+import styles from "./Anotador.module.css"  
 
 export default function Anotador (props) {
 
@@ -20,12 +20,26 @@ export default function Anotador (props) {
                         <div key={`sospechoso-${index}`} className={styles.divSospechosos}>
                             <p>{categorie}</p>
                             <input type={"checkbox"}></input>
+                        </div>)}
+                        
+                    )}
+
+
+                <div className={styles.divHabitacionesContainer}>
+                    <h2>Habitaciones</h2>
+                    {categorieHabitaciones.map((categorie, index) => {
+                    return <>
+                        <div key={index} className={styles.divHabitaciones}>
+                            <p>{categorie}</p>
+                            <input type={"checkbox"}></input>
                         </div>
 
-                    )
-                    
+                    </>
                 })}
+                </div>
+    
             </div>
+
 
             <h2>Armas</h2>
             {categorieArmas.map((categorie, index) => {
