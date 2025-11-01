@@ -1,10 +1,9 @@
 .tablero {
   display: grid;
-  grid-template-columns: repeat(12, 1fr); /* 12 columnas */
+  grid-template-columns: repeat(16, 1fr); /* 12 columnas */
   grid-template-rows: repeat(12, 1fr);    /* 12 filas */
-  gap: 5px; /* Espacio entre los cuadraditos */
-  width: 500px;
-  height: 500px;
+  width: 115vh;
+  height: 100vh;
   margin: 0 auto; /* Centra el tablero */
 }
 
@@ -13,3 +12,32 @@
   width: 100%;
   height: 100%;
 }
+
+.tunel {
+  background-color: white;
+  border: 2px solid #ae0000;
+  color:black;
+  align-content: center;
+  
+}
+
+.salida {
+  display: grid;
+  background-color: white;
+  margin: 2px;
+  border: 2px solid black;
+  color: black;
+  align-items: center;
+
+}
+
+.habitacion {
+  background-color: #ae0000;
+}
+
+.casillaNormal {
+  display: grid;
+  background-color: black;
+  margin: 2px;
+}
+
