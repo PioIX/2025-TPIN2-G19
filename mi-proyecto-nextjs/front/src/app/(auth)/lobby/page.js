@@ -135,7 +135,7 @@ export default function Lobby() {
 
     try {
       const userId = sessionStorage.getItem("userId")
-      
+      console.log(userId)
       const res = await fetch("http://localhost:4000/createroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -153,14 +153,14 @@ export default function Lobby() {
         return
       }
 
-      const { roomId } = await res.json();
+      const { roomId } = data;
       localStorage.setItem("roomId", roomId);
       router.push(`/tablero`);
     } catch (error) {
       console.error("Error de red:", error);
       alert("No se pudo conectar con el servidor.");
     }
-  };
+    
     try {  
       sessionStorage.setItem("gameRoomId", data.roomId)
       setSuccess(`¡Sala creada con éxito!`)
@@ -181,9 +181,9 @@ export default function Lobby() {
 
   const isAdmin = user && (user.admin === 1 || user.admin === "1" || user.admin === true || user.admin > 0)
 
-  if (loading) {
-    return <div className={styles.lobbyContainer}>Cargando...</div>
-  }
+  /*if (loading) {
+    return( <div className={styles.lobbyContainer}>Cargando...</div>)
+  }*/
 
   return (
     <div className={styles.lobbyContainer}>
@@ -235,3 +235,5 @@ export default function Lobby() {
       </div>
     </div>
   )
+
+}

@@ -32,7 +32,7 @@ credentials: true, // Habilitar el envío de cookies
 },
 });
 
-app.post('/createroom', async (req, res) => {
+app.post('/createCode', async (req, res) => {
   const { name, players, admin } = req.body;
 
   console.log('📥 Petición recibida:', { name, players, admin });
@@ -570,7 +570,7 @@ app.post('/login', async (req, res) => {
 
 app.post('/createroom', async (req, res) => {
   const { name, players, admin } = req.body;
-
+  console.log({ name, players, admin })
   try {
     // Crear la sala
     const insertQuery = `
@@ -585,8 +585,8 @@ app.post('/createroom', async (req, res) => {
     INSERT INTO UsersXRooms (userId, gameRoomId)
     VALUES (${admin}, ${roomId})
     `);
-
-    res.send({ roomId });
+      console.log(roomId)
+    res.send({ roomId: roomId });
   } catch (error) {
     console.error("Error al crear la sala:", error);
     res.status(500).send("Error al crear la sala");
