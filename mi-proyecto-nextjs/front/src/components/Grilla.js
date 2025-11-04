@@ -2,6 +2,7 @@
 
 import React from "react"
 import styles from "./Grilla.module.css"  // Importa los estilos de CSS Modules
+import { useState } from "react"
 
 /*export default function Grilla (props) {
     const cuadrados = Array(144).fill(null); 
@@ -35,6 +36,13 @@ export default function Grilla (props){
         
         ];
 
+    const [userPosition, setUserPosition] = useState ({x:0,y:0})
+    const clickear = (x,y) => {
+        if (tablero [x, y] === 4) {
+            setUserPosition ({x,y});
+        }
+    }
+
     return (
         <div className={styles.tablero}>
         {tablero.map((fila, filaIndex) =>
@@ -45,7 +53,8 @@ export default function Grilla (props){
             if (casilla === 2) clase = "salida", textoCasilla = "Salida";
             if (casilla === 3) clase = "habitacion";
             if (casilla === 4) clase = "casillaNormal";
-            return <div key={`${filaIndex}-${colIndex}`} className={styles[clase]}>{textoCasilla}</div>;
+            if (userPosition.x === filaIndex && userPosition.y === colIndex) clase = ' usuario';
+            return <div key={`${filaIndex}-${colIndex}`} className={styles[clase]} onClick={() => clickear(filaIndex, colIndex)}>{textoCasilla}</div>;
         })
         )}
         </div>

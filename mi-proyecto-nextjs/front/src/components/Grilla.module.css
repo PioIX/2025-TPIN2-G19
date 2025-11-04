@@ -2,8 +2,8 @@
   display: grid;
   grid-template-columns: repeat(16, 1fr); /* 12 columnas */
   grid-template-rows: repeat(12, 1fr);    /* 12 filas */
-  width: 115vh;
-  height: 100vh;
+  width: 115vh; /* 870px */
+  height: 100vh;  /* 603px */
   margin: 0 auto; /* Centra el tablero */
 }
 

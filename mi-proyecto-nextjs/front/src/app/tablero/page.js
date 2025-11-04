@@ -65,6 +65,7 @@ export default function Tablero() {
         usersInRoom.map((user, index), numero => Math.floor(Math.random()))
     }
 
+    
     return (
         <>
             <div className={styles["pagina-tablero"]}>
