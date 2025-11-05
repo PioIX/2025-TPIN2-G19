@@ -628,17 +628,21 @@ app.post('/joinroom', async (req, res) => {
       return res.status(400).send("Ya estás en esta sala");
     }*/
 
+    let codigo = realizarQuery(`
+      SELECT gameRoomId FROM GameRooms WHERE joinCode = ${joinCode})
+    `);
+    
     // Insertar al jugador en la tabla relacional
     await realizarQuery(`
       INSERT INTO UsersXRooms (userId, gameRoomId)
-      VALUES (${playerId}, ${joinCode})
+      VALUES (${playerId}, ${codigo[0].gameRoomId})
     `);
 
     res.send({ mensaje: "Unido a la sala con éxito", roomId: joinCode });
 
   } catch (error) {
     console.error("Error al unirse a la sala:", error);
-    res.status(500).send("Error al unirse a la sala");
+    res.status(500).send({res:"Error al unirse a la sala"});
   }
 });
 

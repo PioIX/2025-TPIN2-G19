@@ -88,7 +88,6 @@ export default function Lobby() {
           playerId: userId,
         }),
       })
-      const data = await res.json()
 
       .then(response => response.json())
       .then(data => {
@@ -96,7 +95,7 @@ export default function Lobby() {
         const {roomId} = data
         localStorage.setItem("roomId", roomId)
         console.log("roomId: ", roomId)
-        router.push(`/tablero`);
+        router.push(`/tablero?joinCode='${joinCode}`);
       });
 
       /*if (!res.ok) {

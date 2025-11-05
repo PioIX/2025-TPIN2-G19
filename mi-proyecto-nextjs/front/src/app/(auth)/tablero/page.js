@@ -7,7 +7,7 @@ import Grilla from "@/components/Grilla"
 import styles from "./page.module.css";
 import clsx from 'clsx';
 import Usuarios from "@/components/Usuarios"; 
-import { cardsCharacters, cardsWeapons, cardsRooms } from "/classes/Card.js";
+import { cardsCharacters, cardsWeapons, cardsRooms } from "/classes/Card.js"
 
 
 
@@ -35,23 +35,23 @@ export default function Tablero() {
     }
     
     function repartirCartas(cardsCharacters, cardsWeapons, cardsRooms, usersInRoom) {
-        const cartasDisponiblesCharacters = [cardsCharacters]
-        const cartasDisponiblesWeapons = [cardsWeapons]
-        const cartasDisponiblesRooms = [cardsRooms]
+        const cartasDisponiblesCharacters = cardsCharacters
+        const cartasDisponiblesWeapons = cardsWeapons
+        const cartasDisponiblesRooms = cardsRooms
 
-        for (let i=cartasDisponiblesCharacters.length-1; i>0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [cartasDisponiblesCharacters[i], cartasDisponiblesCharacters[j]] = [cartasDisponiblesCharacters[j], cartasDisponiblesCharacters[i]];
-        }
-
-        const asignaciones = usersInRoom.map((user,i) => ({
-            user, 
-            carta:cartasDisponiblesCharacters[i],
-            key:i 
-        }))
-
-        return asignaciones;
+    for (let i = cartasDisponiblesCharacters.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cartasDisponiblesCharacters[i], cartasDisponiblesCharacters[j]] = [cartasDisponiblesCharacters[j], cartasDisponiblesCharacters[i]];
     }
+
+    const asignaciones = usersInRoom.map((user, i) => ({
+        user, 
+        carta: cartasDisponiblesCharacters[i],
+        key: i
+    }));
+
+    return asignaciones;
+}
 
     async function obtenerUsuariosEnElRoom(params) {
         fetch(`http://localhost:4000/usersInRoom`)
