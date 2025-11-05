@@ -39,5 +39,3 @@ Se le mostrará la hipótesis al jugador siguiente, y tendrá que elegir una car
 En caso de no tener ninguna carta se muestra un cartel indicando que pase el turno al siguiente jugador.
 
 Al momento de hacer una acusación se muestran tres menúes (sospechosos, lugares, armas), se selecciona una opción en cada uno y se confirma la acusación. En caso de ser correcta, ese jugador gana y termina la partida. Por el contrario, si es incorrecta, ese jugador quedará eliminado y la partida continuará.
-
-! [/assets/images/DER.png]
