@@ -1,6 +1,6 @@
-# **<ins>PRESUPUESTO PROYECTO FINAL</ins>**
+**<ins>PRESUPUESTO PROYECTO FINAL</ins>**
 
-## **Propuesta de la aplicación:**
+## **Propuesta de la aplicación**
 Nuestra propuesta es realizar el juego CLUE. El juego se trata de descubrir un crimen: el asesino, el lugar y el arma, los cuales se eligen aleatoriamente cuando comienza la partida. Cada jugador va a ser un detective. Al empezar el juego todos van a tener un anotador con todos los sospechosos, armas y lugares posibles, el cual tienen que usar durante el juego para ir resolviendo el misterio. Todas las “cartas” (sospechosos, armas y lugares) que no forman parte del crimen se reparten aleatoriamente entre los jugadores (se tachan los casilleros de su anotador). Luego se comienza la partida.
 
 Cada uno tiene que seguir estos pasos en su turno:
@@ -25,7 +25,7 @@ Si estás seguro de haber resuelto el misterio podés hacer una acusación:
 - Si tu acusación es incorrecta, quedas fuera del juego.
 > Cada partida ganada te suma 1 punto. Mientras más puntos, más alto apareces en el ranking de jugadores.
 
-## **Funcionalidad:**
+## **Funcionalidad**
 
 Login: Guarda nombre de usuario y contraseña.
 
