@@ -28,7 +28,7 @@ export default function Grilla (props){
         [4,4,4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3,3],
         [2,4,4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,4],
         [4,4,4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,2],
-        [3,3,3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3,3],
+        [3,3,5, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3,3],
         [3,3,3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3,3],
         [3,3,3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 3, 3, 3,3],
         [3,3,3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 3, 3, 3,3],
@@ -53,6 +53,7 @@ export default function Grilla (props){
             if (casilla === 2) clase = "salida", textoCasilla = "Salida";
             if (casilla === 3) clase = "habitacion";
             if (casilla === 4) clase = "casillaNormal";
+            if (casilla === 5) clase = "entrada", textoCasilla = "entrada";
             if (userPosition.x === filaIndex && userPosition.y === colIndex) clase = ' usuario';
             return <div key={`${filaIndex}-${colIndex}`} className={styles[clase]} onClick={() => clickear(filaIndex, colIndex)}>{textoCasilla}</div>;
         })

@@ -16,12 +16,12 @@ export default function Tablero() {
     //const [numeroObtenido, setNumeroObtenido] = useState(0)
     let numeroObtenido=0
     
-    useEffect(()=> {
+    /*useEffect(()=> {
         fetch('http://localhost:4000/usersInRoom')
         .then(response => response.json)
         .then(data => setUsersInRoom(data))
         .then(console.log("usersInRoom: ", usersInRoom))
-    }, [usersInRoom])
+    }, [usersInRoom])*/
 
     function getRandomIntInclusive(min, max) {
         min = Math.ceil(min)

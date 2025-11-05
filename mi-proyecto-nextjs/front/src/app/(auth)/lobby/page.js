@@ -71,10 +71,10 @@ export default function Lobby() {
       return
     }
 
-    /*if (!/^\d{4}$/.test(joinCode)) {
+    if (!/^\d{4}$/.test(joinCode)) {
       setError("El código debe ser de 4 dígitos")
       return
-    }*/
+    }
 
     try {
 
@@ -88,6 +88,7 @@ export default function Lobby() {
           playerId: userId,
         }),
       })
+      const data = await res.json()
 
       .then(response => response.json())
       .then(data => {
@@ -104,7 +105,7 @@ export default function Lobby() {
         return alert(errText || "Error al unirse a la sala.");
       }*/
 
-      const data = await res.json()
+      
 
       if (!res.ok) {
         setError(data.error || "Error al unirse a la sala")
