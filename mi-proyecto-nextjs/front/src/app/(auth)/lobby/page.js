@@ -64,16 +64,10 @@ export default function Lobby() {
     }
   }, [])
 
-  //conectar al socket
-  useEffect(() => {
-    if (!socket) return;
-    //Aquí entrará cuando reciba un evento
-  }, [socket]);
-
-
   //handleJoinRoom
  const handleJoinRoom = async () => {
-  const userId = localStorage.getItem("userId");
+  const userId = sessionStorage.getItem("userId");
+  console.log(userId)
 
   try {
     const res = await fetch("http://localhost:4000/joinroom", {
@@ -83,13 +77,15 @@ export default function Lobby() {
     });
 
     const data = await res.json();
+    console.log(data)
 
     if (!res.ok) {
       setError(data.error || "Error al unirse a la sala");
       return;
     }
 
-    localStorage.setItem("roomId", data.roomId);
+    const roomId = sessionStorage.setItem("gameRoomId", data.roomId);
+    console.log(roomId)
     router.push(`/waitingroom?joinCode=${joinCode}`);
 
   } catch (error) {
@@ -129,7 +125,7 @@ export default function Lobby() {
       }
 
       const { roomId } = data;
-      localStorage.setItem("roomId", roomId);
+      localStorage.setItem("gameRoomId", roomId);
       router.push(`/tablero`);
     } catch (error) {
       console.error("Error de red:", error);

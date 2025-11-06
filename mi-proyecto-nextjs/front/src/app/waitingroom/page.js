@@ -21,10 +21,10 @@ export default function WaitingRoom() {
         const gameRoomId = sessionStorage.getItem("gameRoomId")
         const userId = sessionStorage.getItem("userId")
 
-        if (!gameRoomId) {
+        /*if (!gameRoomId) {
           router.push(`/lobby?user_id=${userId}`)
           return
-        }
+        }*/
 
         // Obtener datos de la sala
         const roomRes = await fetch(`http://localhost:4000/room/${gameRoomId}`)
@@ -67,6 +67,7 @@ export default function WaitingRoom() {
 
   // Socket: Escuchar cuando un jugador se une
   useEffect(() => {
+    console.log("entro aluseeffect")
     if (!socket || !isConnected) return
 
     const gameRoomId = sessionStorage.getItem("gameRoomId")
