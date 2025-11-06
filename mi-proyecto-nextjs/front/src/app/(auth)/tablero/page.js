@@ -34,7 +34,11 @@ export default function Tablero() {
         console.log(numeroObtenido)
     }
     
-    function repartirCartas(usersInRoom) {
+    function repartirCartas() {
+        if (!Array.isArray(usersInRoom) || usersInRoom.length === 0) {
+        console.log("No hay usuarios en la sala");
+        return;
+    }
         const cartasDisponiblesCharacters = cardsCharacters.slice();
         const cartasDisponiblesWeapons = cardsWeapons.slice();
         const cartasDisponiblesRooms = cardsRooms.slice();
@@ -42,6 +46,15 @@ export default function Tablero() {
     for (let i = cartasDisponiblesCharacters.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [cartasDisponiblesCharacters[i], cartasDisponiblesCharacters[j]] = [cartasDisponiblesCharacters[j], cartasDisponiblesCharacters[i]];
+    }
+
+     for (let i = cartasDisponiblesWeapons.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cartasDisponiblesWeapons[i], cartasDisponiblesWeapons[j]] = [cartasDisponiblesWeapons[j], cartasDisponiblesWeapons[i]];
+    }
+     for (let i = cartasDisponiblesRooms.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cartasDisponiblesRooms[i], cartasDisponiblesRooms[j]] = [cartasDisponiblesRooms[j], cartasDisponiblesRooms[i]];
     }
 
     const asignaciones = usersInRoom.map((user, i) => ({
@@ -57,7 +70,7 @@ export default function Tablero() {
         fetch(`http://localhost:4000/usersInRoom`)
         .then(response => response.json())
         .then(result => {
-            setUsers(result)
+            setUsersInRoom(result)
         })
     }
 

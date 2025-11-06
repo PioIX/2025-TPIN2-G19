@@ -4,7 +4,7 @@ class CardCharacter {
     }
 }
 
-const cardsCharacters=[]
+export const cardsCharacters=[]
 cardsCharacters.push(new CardCharacter("Señorita Escarlata"))
 cardsCharacters.push(new CardCharacter("Señora Azulino"))
 cardsCharacters.push(new CardCharacter ("Profesor Moradillo"))
@@ -19,7 +19,7 @@ class CardWeapons {
 }
 
 
-const cardsWeapons=[]
+export const cardsWeapons=[]
 cardsWeapons.push(new CardWeapons("Cuchillo"))
 cardsWeapons.push(new CardWeapons("Revólver"))
 cardsWeapons.push(new CardWeapons("Soga"))
@@ -33,8 +33,8 @@ class CardRooms {
     }
 }
 
-const cardsRooms=[]
-cardsRooms.push=(new CardRooms("Habitación"))
-cardsRooms.push=(new CardRooms("Comedor"))
-cardsRooms.push=(new CardRooms("Cocina"))
-cardsRooms.push=(new CardRooms("Baño"))
+export const cardsRooms=[]
+cardsRooms.push(new CardRooms("Habitación"))
+cardsRooms.push(new CardRooms("Comedor"))
+cardsRooms.push(new CardRooms("Cocina"))
+cardsRooms.push(new CardRooms("Baño"))
