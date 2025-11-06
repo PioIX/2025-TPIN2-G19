@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useEffect } from "react"
+import { useSocket } from "@/hooks/useSocket";
 import Button from "@/components/Button"
 import styles from "./lobby.module.css"
 
@@ -16,27 +17,25 @@ export default function Lobby() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  /*useEffect( () => {
-    fetch(`http://localhost:4000/deleteUsersInRoom`)
-  }, [])*/
-
+  //useEffect para guardar user_id
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const userId = searchParams.get('user_id') || sessionStorage.getItem("userId")
         
         if (!userId) {
-          console.error("No se encontró user_id")
+          console.error("No se encontró user id")
           router.push("/login")
           return
         }
 
-        const res = await fetch(`http://localhost:4000/user/${userId}`)
+        const res = await fetch(`http://localhost:4000/user/${userId}`) //trae toda la info del usuario
         
         if (res.ok) {
           const data = await res.json()
-          setUser(data)
+          setUser(data) // guarda la info del usuario en el estado
           sessionStorage.setItem("userId", userId)
+          console.log(user)
         } else {
           router.push("/login")
         }
@@ -51,6 +50,8 @@ export default function Lobby() {
     fetchUser()
   }, [searchParams, router])
 
+
+  //useEffect para eliminar al usuario de cualquier room anterior
   useEffect(() => {
     const userId = sessionStorage.getItem("userId")
     if (userId) {
@@ -62,16 +63,17 @@ export default function Lobby() {
     }
   }, [])
 
+  //handleJoinRoom
   const handleJoinRoom = async () => {
     setError("")
     setSuccess("")
     
-    if (!joinCode.trim()) {
+    if (!joinCode.trim()) { //verifica que no esté vacío
       setError("Ingrese el código de sala")
       return
     }
 
-    if (!/^\d{4}$/.test(joinCode)) {
+    if (joinCode.length !== 4) { //verifica que tenga 4 dígitos
       setError("El código debe ser de 4 dígitos")
       return
     }
@@ -79,7 +81,7 @@ export default function Lobby() {
     try {
 
       const userId = sessionStorage.getItem("userId")
-      
+
       const res = await fetch("http://localhost:4000/joinroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -95,7 +97,7 @@ export default function Lobby() {
         const {roomId} = data
         localStorage.setItem("roomId", roomId)
         console.log("roomId: ", roomId)
-        router.push(`/tablero?joinCode='${joinCode}`);
+        router.push(`/tablero?joinCode=${joinCode}`);
       });
 
       /*if (!res.ok) {
@@ -103,7 +105,6 @@ export default function Lobby() {
         console.error("Error al unirse a la sala:", errText);
         return alert(errText || "Error al unirse a la sala.");
       }*/
-
       
 
       if (!res.ok) {
@@ -124,6 +125,8 @@ export default function Lobby() {
     }
   }
 
+
+  // handleCreateRoom
   const handleCreateRoom = async () => {
     setError("")
     setSuccess("")

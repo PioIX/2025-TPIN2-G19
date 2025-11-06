@@ -7,7 +7,7 @@ import Grilla from "@/components/Grilla"
 import styles from "./page.module.css";
 import clsx from 'clsx';
 import Usuarios from "@/components/Usuarios"; 
-import { cardsCharacters, cardsWeapons, cardsRooms } from "/classes/Card.js"
+import { cardsCharacters, cardsWeapons, cardsRooms } from "@/classes/Card";
 
 
 
@@ -34,10 +34,10 @@ export default function Tablero() {
         console.log(numeroObtenido)
     }
     
-    function repartirCartas(cardsCharacters, cardsWeapons, cardsRooms, usersInRoom) {
-        const cartasDisponiblesCharacters = cardsCharacters
-        const cartasDisponiblesWeapons = cardsWeapons
-        const cartasDisponiblesRooms = cardsRooms
+    function repartirCartas(usersInRoom) {
+        const cartasDisponiblesCharacters = cardsCharacters.slice();
+        const cartasDisponiblesWeapons = cardsWeapons.slice();
+        const cartasDisponiblesRooms = cardsRooms.slice();
 
     for (let i = cartasDisponiblesCharacters.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -61,7 +61,7 @@ export default function Tablero() {
         })
     }
 
-    async function ontenerNumeroAleatorio() {
+    async function obtenerNumeroAleatorio() {
         usersInRoom.map((user, index), numero => Math.floor(Math.random()))
     }
 
