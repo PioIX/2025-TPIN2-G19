@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Button from "@/components/button"
+import Button from "@/components/Button"
 const tipo = "checkbox"
 import Anotador from "@/components/Anotador"
 import Grilla from "@/components/Grilla"
@@ -59,7 +59,7 @@ export default function Tablero() {
     }));
 
     return asignaciones;
-}
+    }
 
     async function obtenerUsuariosEnElRoom(params) {
         fetch(`http://localhost:4000/usersInRoom`)
@@ -82,7 +82,6 @@ export default function Tablero() {
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
                 {/*<Usuarios users={users}></Usuarios>*/}
-
             </div>
         </>
     )
@@ -130,4 +129,5 @@ const Anotador = () => {
         })}
 
     </>
+}
 }

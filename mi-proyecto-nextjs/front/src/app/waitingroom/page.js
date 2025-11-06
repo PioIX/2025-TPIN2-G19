@@ -22,7 +22,7 @@ export default function WaitingRoom() {
         const userId = sessionStorage.getItem("userId")
 
         if (!gameRoomId) {
-          router.push("/lobby")
+          router.push(`/lobby?user_id=${userId}`)
           return
         }
 

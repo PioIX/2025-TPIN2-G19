@@ -595,56 +595,49 @@ app.post('/createroom', async (req, res) => {
 
 
 app.post('/joinroom', async (req, res) => {
-  const { joinCode, playerId } = req.body; // joinCode = gameRoomId
-  console.log(joinCode, playerId)
+  const { joinCode, playerId } = req.body;
 
   try {
-    // Verificar que la sala existe
+    // Buscar sala por joinCode
     const roomResponse = await realizarQuery(`
-      SELECT * FROM GameRooms WHERE gameRoomId = ${joinCode}
+      SELECT * FROM GameRooms WHERE joinCode = ${joinCode}
     `);
+    console.log(roomResponse)
 
-    if (roomResponse.length< 0) {
-      return res.status(404).send("Sala no encontrada");
+    if (roomResponse.length === 0) {
+      return res.status(404).send({ error: "Sala no encontrada" });
     }
 
-    const room = roomResponse[0];
+    const room = roomResponse[0]; // acá tenés gameRoomId también
 
-    // Contar cuántos jugadores ya están en la sala
-    const playersResponse = await realizarQuery(`
-      SELECT COUNT(*) as count FROM UsersXRooms WHERE gameRoomId = ${joinCode}
+    // Verificar si el usuario ya está en ESTA sala
+    const alreadyJoined = await realizarQuery(`
+      SELECT * FROM UsersXRooms 
+      WHERE userId = ${playerId} AND gameRoomId = ${room.gameRoomId}
     `);
-
-    const currentPlayers = playersResponse[0].count;
-
-    // Verificar que el jugador no esté ya en la sala
-    /*const alreadyJoined = await realizarQuery(`
-      SELECT * FROM UsersXRooms WHERE gameRoomId = ${joinCode} AND userId = ${playerId}
-    `);
-
-    console.log("alreadyJoin: ", alreadyJoined)
 
     if (alreadyJoined.length > 0) {
-      return res.status(400).send("Ya estás en esta sala");
-    }*/
+      return res.status(400).send({ error: "Ya estás en esta sala" });
+    }
 
-    let codigo = realizarQuery(`
-      SELECT gameRoomId FROM GameRooms WHERE joinCode = ${joinCode})
-    `);
-    
-    // Insertar al jugador en la tabla relacional
+    // Insertar en UsersXRooms usando gameRoomId REAL
     await realizarQuery(`
       INSERT INTO UsersXRooms (userId, gameRoomId)
-      VALUES (${playerId}, ${codigo[0].gameRoomId})
+      VALUES (${playerId}, ${room.gameRoomId})
     `);
 
-    res.send({ mensaje: "Unido a la sala con éxito", roomId: joinCode });
+    res.send({
+      mensaje: "Unido a la sala con éxito",
+      roomId: room.joinCode,     // <-- esto se guarda en el front
+      gameRoomId: room.gameRoomId // <-- si lo necesitás después
+    });
 
   } catch (error) {
     console.error("Error al unirse a la sala:", error);
-    res.status(500).send({res:"Error al unirse a la sala"});
+    res.status(500).send({ error: "Error al unirse a la sala" });
   }
 });
+
 
 io.on("connection", (socket) => {
     const req = socket.request;
