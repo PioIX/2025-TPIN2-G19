@@ -2,7 +2,7 @@
 
 import React from "react"
 import styles from "./Grilla.module.css"  // Importa los estilos de CSS Modules
-import { useState } from "react"
+import { useState , useEffect } from "react"
 
 /*export default function Grilla (props) {
     const cuadrados = Array(144).fill(null); 
@@ -38,9 +38,8 @@ export default function Grilla (props){
 
     const [userPosition, setUserPosition] = useState ({x:0,y:0})
     const clickear = (x,y) => {
-        if (tablero [x, y] === 4) {
-            setUserPosition ({x,y});
-        }
+        setUserPosition ({x, y});
+        console.log(userPosition)
     }
 
     return (

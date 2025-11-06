@@ -50,3 +50,6 @@
   
 }
 
+.cuadrado ::selection{
+  background-color: #000000;
+}

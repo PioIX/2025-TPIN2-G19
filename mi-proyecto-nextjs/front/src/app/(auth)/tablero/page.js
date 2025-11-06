@@ -78,14 +78,19 @@ export default function Tablero() {
         usersInRoom.map((user, index), numero => Math.floor(Math.random()))
     }
 
-    
+    async function acusar() {
+        
+    }
+
     return (
         <>
             <div className={styles["pagina-tablero"]}>
                 <Anotador></Anotador>
-                <Grilla></Grilla>
+                <Grilla onClick={() => clickear(filaIndex, colIndex)}></Grilla>
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
+                <button onClick={acusar}>acusar</button>
+                <
                 {/*<Usuarios users={users}></Usuarios>*/}
 
             </div>
