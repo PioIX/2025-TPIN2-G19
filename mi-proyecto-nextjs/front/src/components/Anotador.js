@@ -3,7 +3,7 @@
 import React from "react"
 import styles from "./Anotador.module.css"  
 
-export default function Anotador (props) {
+export default function Anotador() {
 
     const categorieSospechosos = ["Señorita Escarlata", "Señora Azulino", "Profesor Moradillo", "Señor Verdi", "Señora Blanco"]
     const categorieArmas  = ["Cuchillo", "Revólver", "Soga", "Llave inglesa", "Veneno"]
