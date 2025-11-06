@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useSocket } from "@/hooks/useSocket";
 import styles from "./login.module.css"
 
 export default function LoginPage() {
-  const [usuarios, setUsuarios] = useState([]) // No es necesario ya que vamos a validar por backend
-  const [loginInput, setLoginInput] = useState("") // Email o username
-  const [password, setPassword] = useState("") // Contraseña
-  const [error, setError] = useState("") // Error de login
+  const [usuarios, setUsuarios] = useState([])
+  const [loginInput, setLoginInput] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const router = useRouter()
 
-  // Solo obtener los usuarios si es necesario (lo haremos por backend)
   useEffect(() => {
     async function obtenerUsuarios() {
       try {
@@ -22,17 +23,22 @@ export default function LoginPage() {
         console.log(data)
       } catch (err) {
         console.error("Error al conectar con el servidor:", err)
-        setError("No se pudo conectar con el servidor.")
       }
     }
 
     obtenerUsuarios()
   }, [])
 
-  // Función para manejar el login con validación backend
   const handleLogin = async (e) => {
     e.preventDefault()
-    setError("") // Limpiar errores previos
+    setError("")
+    setSuccess("")
+
+    // Validar campos vacíos
+    if (!loginInput.trim() || !password.trim()) {
+      setError("Por favor, completá todos los campos")
+      return
+    }
 
     try {
       const response = await fetch("http://localhost:4000/login", {
@@ -41,22 +47,31 @@ export default function LoginPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: loginInput,  // Email ingresado
-          password: password, // Contraseña ingresada
+          email: loginInput,
+          password: password,
         }),
       })
 
+      // Intentar parsear la respuesta JSON
       const data = await response.json()
 
       if (response.ok) {
-        // Si el login es exitoso, redirigimos al usuario
-        router.push(`/lobby?user_id=${data.userId}`) // Cambiar 'userId' por el nombre de campo adecuado
+        // Login exitoso
+        setSuccess("¡Inicio de sesión exitoso! Redirigiendo...")
+        sessionStorage.setItem("userId", data.userId)
+        sessionStorage.setItem("isLoggedIn", "true")
+        
+        setTimeout(() => {
+          router.push(`/lobby?user_id=${data.userId}`)
+        }, 1000)
       } else {
-        setError(data.mensaje || "Usuario o contraseña incorrectos ❌") // Mostrar error
+        // Error del servidor (400, 401, etc.)
+        setError(data.mensaje || data.message || "Usuario o contraseña incorrectos ❌")
       }
     } catch (err) {
-      setError("Hubo un error al conectar con el servidor.")
+      // Error de red o servidor no disponible
       console.error("Error en login:", err)
+      setError("No se pudo conectar con el servidor. Verificá tu conexión.")
     }
   }
 
@@ -68,7 +83,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className={styles.LoginForm}>
           <input
             type="text"
-            placeholder="Ingrese correo electrónico o nombre de usuario"
+            placeholder="Ingrese correo electrónico"
             value={loginInput}
             onChange={(e) => setLoginInput(e.target.value)}
             className={styles.Input}
@@ -86,6 +101,7 @@ export default function LoginPage() {
         </form>
 
         {error && <p className={styles.Error}>{error}</p>}
+        {success && <p className={styles.Success}>{success}</p>}
 
         <p className={styles.RegisterText}>
           ¿No tenés cuenta?{" "}

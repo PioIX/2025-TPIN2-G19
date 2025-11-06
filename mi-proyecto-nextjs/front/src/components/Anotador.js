@@ -12,50 +12,47 @@ export default function Anotador() {
 
     return (
     <>
-        <div className={styles.divPrincipal}>       
-            <div className={styles.divSospechososContainer}>
+        <div className={styles.divPrincipal}>
                 <h2>Sospechosos</h2>
+            <div className="divSospechososContainer">
                 {categorieSospechosos.map((categorie, index) => {
-                    return <>
-                        <div key={index} className={styles.divSospechosos}>
+                    return (
+                        <div key={`sospechoso-${index}`} className={styles.divSospechosos}>
                             <p>{categorie}</p>
-                            <input key={index} type={"checkbox"}></input>
+                            <input type={"checkbox"}></input>
+                        </div>)}
+                        
+                    )}
+            </div>
+
+
+            <h2>Armas</h2>
+            <div className="divArmasContainer">
+                {categorieArmas.map((categorie, index) => {
+                    return (
+                        <div key={`arma-${index}`} className={styles.divArmas}>
+                            <p>{categorie}</p>
+                            <input type={"checkbox"}></input>
                         </div>
 
-                    </>
-                    
+                    )
                 })}
             </div>
 
-            <div className={styles.divArmasContainer}>
-                <h2>Armas</h2>
-                {categorieArmas.map((categorie, index) => {
-                return <>
-                    <div key={index} className={styles.divArmas}>
-                        <p>{categorie}</p>
-                        <input type={"checkbox"}></input>
-                    </div>
-
-                </>
-            })}
-            </div>
-
-            <div className={styles.divHabitacionesContainer}>
-                <h2>Habitaciones</h2>
+            <h2>Habitaciones</h2>
+            <div className="divHabitacionesContainer">
                 {categorieHabitaciones.map((categorie, index) => {
-                return <>
-                    <div key={index} className={styles.divHabitaciones}>
-                        <p>{categorie}</p>
-                        <input type={"checkbox"}></input>
-                    </div>
+                    return (
+                        <div key={`habitacion-${index}`} className={styles.divHabitaciones}>
+                            <p>{categorie}</p>
+                            <input type={"checkbox"}></input>
+                        </div>
 
-                </>
-            })}
+                    )
+                })}
             </div>
-   
         </div>
 
     </>
-    
     )
 }
