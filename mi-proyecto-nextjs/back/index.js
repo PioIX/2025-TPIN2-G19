@@ -32,7 +32,7 @@ credentials: true, // Habilitar el envío de cookies
 },
 });
 
-app.post('/createroom', async (req, res) => {
+app.post('/createCode', async (req, res) => {
   const { name, players, admin } = req.body;
 
   console.log('📥 Petición recibida:', { name, players, admin });
@@ -113,13 +113,14 @@ app.post('/createroom', async (req, res) => {
 
 
 // Agregar este endpoint nuevo
-app.get('/room/:gameRoomId', async (req, res) => {
-  const { gameRoomId } = req.params;
+app.get('/room', async (req, res) => {
+  const { joinCode } = req.query;
   
   try {
     const room = await realizarQuery(`
-      SELECT * FROM GameRooms WHERE gameRoomId = ${gameRoomId}
+      SELECT * FROM GameRooms WHERE joinCode = ${joinCode}
     `);
+    console.log("ROOM ENDPOINT: ", room);
     
     if (room.length === 0) {
       return res.status(404).json({ error: "Sala no encontrada" });
@@ -134,13 +135,16 @@ app.get('/room/:gameRoomId', async (req, res) => {
 
 // Modificar el endpoint usersInRoom para devolver más datos
 app.get('/usersInRoom', async function(req,res){
+  const { joinCode } = req.query;
     try {
         const response = await realizarQuery(`
             SELECT Users.userId, Users.username, Users.photo
             FROM Users
             INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
-            WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
+            INNER JOIN GameRooms on GameRooms.gameRoomId= UsersXRooms.gameRoomId
+            WHERE GameRooms.joinCode = ${joinCode};  
         `)
+        console.log("aaaaaaaaa", response)
         res.send(response)
     } catch (error) {
         console.log(error)
@@ -342,14 +346,14 @@ app.get('/users', async function(req,res){
 
 app.get('/usersInRoom', async function(req,res){
     try {
-        console.log("Entre2")
+        console.log("USERS IN ROOM")
         const response = await realizarQuery(`
             SELECT DISTINCT Users.username
             FROM Users
-            INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
-            WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
+            INNER JOIN UsersXRooms ON UsersXRooms.userId = Users.userId
+            WHERE UsersXRooms.gameRoomId = ${req.body.roomId};
         `)
-        console.log(response)
+        console.log("RESPONSE: ", response)
         res.send(response)
     } catch (error) {
         console.log(error)
@@ -570,7 +574,7 @@ app.post('/login', async (req, res) => {
 
 app.post('/createroom', async (req, res) => {
   const { name, players, admin } = req.body;
-
+  console.log({ name, players, admin })
   try {
     // Crear la sala
     const insertQuery = `
@@ -585,8 +589,8 @@ app.post('/createroom', async (req, res) => {
     INSERT INTO UsersXRooms (userId, gameRoomId)
     VALUES (${admin}, ${roomId})
     `);
-
-    res.send({ roomId });
+      console.log(roomId)
+    res.send({ roomId: roomId });
   } catch (error) {
     console.error("Error al crear la sala:", error);
     res.status(500).send("Error al crear la sala");
@@ -595,51 +599,49 @@ app.post('/createroom', async (req, res) => {
 
 
 app.post('/joinroom', async (req, res) => {
-  const { joinCode, playerId } = req.body; // joinCode = gameRoomId
+  const { joinCode, playerId } = req.body;
 
   try {
-    // Verificar que la sala existe
+    // Buscar sala por joinCode
     const roomResponse = await realizarQuery(`
-      SELECT * FROM GameRooms WHERE gameRoomId = ${joinCode}
+      SELECT * FROM GameRooms WHERE joinCode = ${joinCode}
     `);
+    console.log(roomResponse)
 
     if (roomResponse.length === 0) {
-      return res.status(404).send("Sala no encontrada");
+      return res.status(404).send({ error: "Sala no encontrada" });
     }
 
-    const room = roomResponse[0];
+    const room = roomResponse[0]; // acá tenés gameRoomId también
 
-    // Contar cuántos jugadores ya están en la sala
-    const playersResponse = await realizarQuery(`
-      SELECT COUNT(*) as count FROM UsersXRooms WHERE gameRoomId = ${joinCode}
+    // Verificar si el usuario ya está en ESTA sala
+    const alreadyJoined = await realizarQuery(`
+      SELECT * FROM UsersXRooms 
+      WHERE userId = ${playerId} AND gameRoomId = ${room.gameRoomId}
     `);
-
-    const currentPlayers = playersResponse[0].count;
-
-    // Verificar que el jugador no esté ya en la sala
-    /*const alreadyJoined = await realizarQuery(`
-      SELECT * FROM UsersXRooms WHERE gameRoomId = ${joinCode} AND userId = ${playerId}
-    `);
-
-    console.log("alreadyJoin: ", alreadyJoined)
 
     if (alreadyJoined.length > 0) {
-      return res.status(400).send("Ya estás en esta sala");
-    }*/
+      return res.status(400).send({ error: "Ya estás en esta sala" });
+    }
 
-    // Insertar al jugador en la tabla relacional
+    // Insertar en UsersXRooms usando gameRoomId REAL
     await realizarQuery(`
       INSERT INTO UsersXRooms (userId, gameRoomId)
-      VALUES (${playerId}, ${joinCode})
+      VALUES (${playerId}, ${room.gameRoomId})
     `);
 
-    res.send({ mensaje: "Unido a la sala con éxito", roomId: joinCode });
+    res.send({
+      mensaje: "Unido a la sala con éxito",
+      roomId: room.joinCode,     // <-- esto se guarda en el front
+      gameRoomId: room.gameRoomId // <-- si lo necesitás después
+    });
 
   } catch (error) {
     console.error("Error al unirse a la sala:", error);
-    res.status(500).send("Error al unirse a la sala");
+    res.status(500).send({ error: "Error al unirse a la sala" });
   }
 });
+
 
 io.on("connection", (socket) => {
     const req = socket.request;
@@ -704,4 +706,3 @@ io.on("connection", (socket) => {
         console.log("Disconnect");
     });
 });
-

@@ -16,23 +16,25 @@ export default function Lobby() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
+
+  //useEffect para guardar user_id
   useEffect(() => {
+    const userId = searchParams.get("user_id") || sessionStorage.getItem("userId")
     const fetchUser = async () => {
       try {
-        const userId = searchParams.get('user_id') || sessionStorage.getItem("userId")
-        
         if (!userId) {
-          console.error("No se encontró user_id")
+          console.error("No se encontró user id")
           router.push("/login")
           return
         }
 
-        const res = await fetch(`http://localhost:4000/user/${userId}`)
+        const res = await fetch(`http://localhost:4000/user/${userId}`) //trae toda la info del usuario
         
         if (res.ok) {
           const data = await res.json()
-          setUser(data)
+          setUser(data) // guarda la info del usuario en el estado
           sessionStorage.setItem("userId", userId)
+          console.log(user)
         } else {
           router.push("/login")
         }
@@ -47,6 +49,8 @@ export default function Lobby() {
     fetchUser()
   }, [searchParams, router])
 
+
+  //useEffect para eliminar al usuario de cualquier room anterior
   useEffect(() => {
     const userId = sessionStorage.getItem("userId")
     if (userId) {
@@ -58,52 +62,36 @@ export default function Lobby() {
     }
   }, [])
 
-  const handleJoinRoom = async () => {
-    setError("")
-    setSuccess("")
-    
-    if (!joinCode.trim()) {
-      setError("Ingrese el código de sala")
-      return
+  //handleJoinRoom
+ const handleJoinRoom = async () => {
+  const userId = sessionStorage.getItem("userId");
+  console.log(userId)
+
+  try {
+    const res = await fetch("http://localhost:4000/joinroom", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ joinCode, playerId: userId }),
+    });
+
+    const data = await res.json();
+    console.log(data)
+
+    if (!res.ok) {
+      setError(data.error || "Error al unirse a la sala");
+      return;
     }
 
-    if (!/^\d{4}$/.test(joinCode)) {
-      setError("El código debe ser de 4 dígitos")
-      return
-    }
+    sessionStorage.setItem("joinCode", joinCode)
+    router.push(`/waitingroom?joinCode=${joinCode}`);
 
-    try {
-      const userId = sessionStorage.getItem("userId")
-      
-      const res = await fetch("http://localhost:4000/joinroom", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          joinCode: joinCode,
-          playerId: userId,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || "Error al unirse a la sala")
-        return
-      }
-
-      sessionStorage.setItem("gameRoomId", data.roomId)
-      setSuccess(`¡Uniéndose a "${data.roomName}"!`)
-      
-      setTimeout(() => {
-        router.push("/waitingroom")
-      }, 1000)
-
-    } catch (error) {
-      console.error("Error de red:", error)
-      setError("No se pudo conectar con el servidor")
-    }
+  } catch (error) {
+    setError("No se pudo conectar con el servidor");
   }
+};
 
+
+  // handleCreateRoom
   const handleCreateRoom = async () => {
     setError("")
     setSuccess("")
@@ -115,7 +103,7 @@ export default function Lobby() {
 
     try {
       const userId = sessionStorage.getItem("userId")
-      
+      console.log(userId)
       const res = await fetch("http://localhost:4000/createroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -133,6 +121,15 @@ export default function Lobby() {
         return
       }
 
+      const { roomId } = data;
+      localStorage.setItem("gameRoomId", roomId);
+      router.push(`/tablero`);
+    } catch (error) {
+      console.error("Error de red:", error);
+      alert("No se pudo conectar con el servidor.");
+    }
+    
+    try {  
       sessionStorage.setItem("gameRoomId", data.roomId)
       setSuccess(`¡Sala creada con éxito!`)
       
@@ -152,9 +149,9 @@ export default function Lobby() {
 
   const isAdmin = user && (user.admin === 1 || user.admin === "1" || user.admin === true || user.admin > 0)
 
-  if (loading) {
-    return <div className={styles.lobbyContainer}>Cargando...</div>
-  }
+  /*if (loading) {
+    return( <div className={styles.lobbyContainer}>Cargando...</div>)
+  }*/
 
   return (
     <div className={styles.lobbyContainer}>
@@ -206,4 +203,6 @@ export default function Lobby() {
       </div>
     </div>
   )
+
 }
+

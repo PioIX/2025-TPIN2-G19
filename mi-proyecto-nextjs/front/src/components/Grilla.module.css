@@ -2,8 +2,8 @@
   display: grid;
   grid-template-columns: repeat(16, 1fr); /* 12 columnas */
   grid-template-rows: repeat(12, 1fr);    /* 12 filas */
-  width: 115vh;
-  height: 100vh;
+  width: 115vh; /* 870px */
+  height: 100vh;  /* 603px */
   margin: 0 auto; /* Centra el tablero */
 }
 
@@ -39,5 +39,14 @@
   display: grid;
   background-color: black;
   margin: 2px;
+}
+
+.entrada {
+  display: flex;
+  border-top: 10px solid black;
+  background-color: #ae0000;
+  color:#000000;
+  align-items: center;
+  
 }
 
