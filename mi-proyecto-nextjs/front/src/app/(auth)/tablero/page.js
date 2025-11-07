@@ -8,6 +8,8 @@ import styles from "./page.module.css";
 import clsx from 'clsx';
 import Usuarios from "@/components/Usuarios"; 
 import { cardsCharacters, cardsWeapons, cardsRooms } from "@/classes/Card";
+import FormsAcusacion from "@/components/FormsAcusacion";
+import Button from "@/components/Button"
 
 
 
@@ -78,8 +80,11 @@ export default function Tablero() {
         usersInRoom.map((user, index), numero => Math.floor(Math.random()))
     }
 
-    async function acusar() {
-        
+    const handleAcusacion = (valores) => {
+        console.log("Valores seleccionados:", valores);
+    }
+    
+    function volver(){
     }
 
     return (
@@ -89,8 +94,7 @@ export default function Tablero() {
                 <Grilla onClick={() => clickear(filaIndex, colIndex)}></Grilla>
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
-                <button onClick={acusar}>acusar</button>
-                <
+                <FormsAcusacion onClick={volver} onSubmit={handleAcusacion}></FormsAcusacion>
                 {/*<Usuarios users={users}></Usuarios>*/}
 
             </div>
