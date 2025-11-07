@@ -135,13 +135,16 @@ app.get('/room', async (req, res) => {
 
 // Modificar el endpoint usersInRoom para devolver más datos
 app.get('/usersInRoom', async function(req,res){
+  const { joinCode } = req.query;
     try {
         const response = await realizarQuery(`
             SELECT Users.userId, Users.username, Users.photo
             FROM Users
             INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
-            WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
+            INNER JOIN GameRooms on GameRooms.gameRoomId= UsersXRooms.gameRoomId
+            WHERE GameRooms.joinCode = ${joinCode};  
         `)
+        console.log("aaaaaaaaa", response)
         res.send(response)
     } catch (error) {
         console.log(error)
@@ -703,4 +706,3 @@ io.on("connection", (socket) => {
         console.log("Disconnect");
     });
 });
-

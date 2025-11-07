@@ -23,6 +23,7 @@ export default function WaitingRoom() {
     if (!socket || !isConnected) return
 
     const joinCode = sessionStorage.getItem("joinCode")
+    console.log(joinCode)
     if (joinCode) {
       socket.emit("joinRoom", { room: joinCode })
       console.log("hizp el emit")
@@ -48,9 +49,10 @@ export default function WaitingRoom() {
     const fetchRoomData = async () => {
       try {
         const joinCode = sessionStorage.getItem("joinCode")
+        console.log(joinCode)
         const userId = sessionStorage.getItem("userId")
 
-        if (!gameRoomId) {
+        if (!joinCode) {
           router.push(`/lobby?user_id=${userId}`)
           return
         }
@@ -78,13 +80,15 @@ export default function WaitingRoom() {
     fetchRoomData()
   }, [router])
 
-  const fetchPlayers = async (gameRoomId) => {
+  const fetchPlayers = async (joinCode) => {
     try {
-      const res = await fetch(`http://localhost:4000/usersInRoom?gameRoomId=${gameRoomId}`)
+      const res = await fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
+      console.log("fetch players", res)
       if (!res.ok) throw new Error("Error al obtener jugadores")
       
       const data = await res.json()
       setPlayers(data)
+      console.log("data fetch players ", data)
       
       // Verificar si todos los jugadores se unieron
       if (roomData && data.length >= roomData.players) {

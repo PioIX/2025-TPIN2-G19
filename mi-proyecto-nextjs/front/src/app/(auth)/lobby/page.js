@@ -82,9 +82,7 @@ export default function Lobby() {
       return;
     }
 
-    sessionStorage.setItem("joinCode", data.joinCode)
-    const roomId = data.joinCode
-    console.log(joinCode)
+    sessionStorage.setItem("joinCode", joinCode)
     router.push(`/waitingroom?joinCode=${joinCode}`);
 
   } catch (error) {
@@ -207,3 +205,4 @@ export default function Lobby() {
   )
 
 }
+
