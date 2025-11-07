@@ -15,19 +15,48 @@ export default function WaitingRoom() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [canStart, setCanStart] = useState(false)
 
+  console.log("ENTRO A WAITING ROOM")
+
+  // Socket: Escuchar cuando un jugador se une
+  useEffect(() => {
+    console.log("entro al useEffect de socket")
+    if (!socket || !isConnected) return
+
+    const joinCode = sessionStorage.getItem("joinCode")
+    if (joinCode) {
+      socket.emit("joinRoom", { room: joinCode })
+      console.log("hizp el emit")
+      
+      socket.on("playerJoined", (data) => {
+        console.log("Nuevo jugador se unió:", data)
+        fetchPlayers(joinCode)
+      })
+
+      socket.on("gameStarted", () => {
+        console.log("¡El juego ha comenzado!")
+        router.push("/tablero")
+      })
+    }
+
+    return () => {
+      socket.off("playerJoined")
+      socket.off("gameStarted")
+    }
+  }, [socket, isConnected, roomData, router])
+
   useEffect(() => {
     const fetchRoomData = async () => {
       try {
-        const gameRoomId = sessionStorage.getItem("gameRoomId")
+        const joinCode = sessionStorage.getItem("joinCode")
         const userId = sessionStorage.getItem("userId")
 
-        /*if (!gameRoomId) {
+        if (!gameRoomId) {
           router.push(`/lobby?user_id=${userId}`)
           return
-        }*/
+        }
 
         // Obtener datos de la sala
-        const roomRes = await fetch(`http://localhost:4000/room/${gameRoomId}`)
+        const roomRes = await fetch(`http://localhost:4000/room?joinCode=${joinCode}`)
         if (!roomRes.ok) throw new Error("Sala no encontrada")
         
         const room = await roomRes.json()
@@ -35,7 +64,8 @@ export default function WaitingRoom() {
         setIsAdmin(room.admin == userId)
 
         // Obtener jugadores en la sala
-        fetchPlayers(gameRoomId)
+        fetchPlayers(joinCode);
+        console.log("FUNCIONO!!!!")
         
       } catch (error) {
         console.error("Error al obtener sala:", error)
@@ -64,32 +94,6 @@ export default function WaitingRoom() {
       console.error("Error al obtener jugadores:", error)
     }
   }
-
-  // Socket: Escuchar cuando un jugador se une
-  useEffect(() => {
-    console.log("entro aluseeffect")
-    if (!socket || !isConnected) return
-
-    const gameRoomId = sessionStorage.getItem("gameRoomId")
-    if (gameRoomId) {
-      socket.emit("joinRoom", { room: gameRoomId })
-      
-      socket.on("playerJoined", (data) => {
-        console.log("Nuevo jugador se unió:", data)
-        fetchPlayers(gameRoomId)
-      })
-
-      socket.on("gameStarted", () => {
-        console.log("¡El juego ha comenzado!")
-        router.push("/tablero")
-      })
-    }
-
-    return () => {
-      socket.off("playerJoined")
-      socket.off("gameStarted")
-    }
-  }, [socket, isConnected, roomData, router])
 
   // Actualizar jugadores cada 3 segundos
   useEffect(() => {

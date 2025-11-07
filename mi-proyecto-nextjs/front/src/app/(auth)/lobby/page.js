@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useEffect } from "react"
-import { useSocket } from "@/hooks/useSocket";
 import Button from "@/components/Button"
 import styles from "./lobby.module.css"
 
@@ -16,7 +15,6 @@ export default function Lobby() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
-  const { socket, isConnected } = useSocket();
 
 
   //useEffect para guardar user_id
@@ -84,8 +82,9 @@ export default function Lobby() {
       return;
     }
 
-    const roomId = sessionStorage.setItem("gameRoomId", data.roomId);
-    console.log(roomId)
+    sessionStorage.setItem("joinCode", data.joinCode)
+    const roomId = data.joinCode
+    console.log(joinCode)
     router.push(`/waitingroom?joinCode=${joinCode}`);
 
   } catch (error) {

@@ -113,13 +113,14 @@ app.post('/createCode', async (req, res) => {
 
 
 // Agregar este endpoint nuevo
-app.get('/room/:gameRoomId', async (req, res) => {
-  const { gameRoomId } = req.params;
+app.get('/room', async (req, res) => {
+  const { joinCode } = req.query;
   
   try {
     const room = await realizarQuery(`
-      SELECT * FROM GameRooms WHERE gameRoomId = ${gameRoomId}
+      SELECT * FROM GameRooms WHERE joinCode = ${joinCode}
     `);
+    console.log("ROOM ENDPOINT: ", room);
     
     if (room.length === 0) {
       return res.status(404).json({ error: "Sala no encontrada" });
