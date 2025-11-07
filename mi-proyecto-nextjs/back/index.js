@@ -32,6 +32,122 @@ credentials: true, // Habilitar el envío de cookies
 },
 });
 
+app.post('/createroom', async (req, res) => {
+  const { name, players, admin } = req.body;
+
+  console.log('📥 Petición recibida:', { name, players, admin });
+
+  try {
+    // Generar código único de 4 dígitos
+    let joinCode = Math.floor(1000 + Math.random() * 9000).toString();
+    console.log('🎲 Código generado:', joinCode);
+    
+    // Verificar que el código no exista ya
+    let existingRoom = await realizarQuery(`
+      SELECT * FROM GameRooms WHERE joinCode = '${joinCode}'
+    `);
+    
+    // Si existe, generar otro código (máximo 10 intentos)
+    let attempts = 0;
+    while (existingRoom.length > 0 && attempts < 10) {
+      joinCode = Math.floor(1000 + Math.random() * 9000).toString();
+      console.log('🔄 Código ya existe, generando nuevo:', joinCode);
+      existingRoom = await realizarQuery(`
+        SELECT * FROM GameRooms WHERE joinCode = '${joinCode}'
+      `);
+      attempts++;
+    }
+
+    if (attempts >= 10) {
+      console.error('❌ No se pudo generar código único después de 10 intentos');
+      return res.status(500).json({ error: "Error al generar código único" });
+    }
+
+    console.log('✅ Código único confirmado:', joinCode);
+
+    // Crear la sala con el código generado - IMPORTANTE: incluir joinCode en el INSERT
+    const insertQuery = `
+      INSERT INTO GameRooms (nameRoom, admin, players, joinCode)
+      VALUES ('${name}', ${admin}, ${players}, '${joinCode}')
+    `;
+
+    console.log('📝 Query:', insertQuery);
+    const response = await realizarQuery(insertQuery);
+    const roomId = response.insertId;
+
+    console.log('✅ Sala insertada con ID:', roomId);
+
+    // Insertar al admin en la sala
+    await realizarQuery(`
+      INSERT INTO UsersXRooms (userId, gameRoomId)
+      VALUES (${admin}, ${roomId})
+    `);
+
+    console.log('✅ Admin agregado a UsersXRooms');
+
+    // Verificar que el joinCode se guardó correctamente
+    const verificacion = await realizarQuery(`
+      SELECT * FROM GameRooms WHERE gameRoomId = ${roomId}
+    `);
+    
+    console.log('🔍 Verificación de sala creada:', verificacion[0]);
+
+    if (!verificacion[0].joinCode) {
+      console.error('⚠️ ALERTA: joinCode es NULL en la base de datos!');
+      return res.status(500).json({ error: "Error al guardar el código de sala" });
+    }
+
+    // Devolver respuesta
+    res.json({ 
+      roomId, 
+      joinCode: verificacion[0].joinCode, // Usar el joinCode de la verificación
+      mensaje: "Sala creada con éxito" 
+    });
+
+  } catch (error) {
+    console.error("💥 Error al crear la sala:", error);
+    res.status(500).json({ error: "Error al crear la sala: " + error.message });
+  }
+});
+
+
+
+// Agregar este endpoint nuevo
+app.get('/room/:gameRoomId', async (req, res) => {
+  const { gameRoomId } = req.params;
+  
+  try {
+    const room = await realizarQuery(`
+      SELECT * FROM GameRooms WHERE gameRoomId = ${gameRoomId}
+    `);
+    
+    if (room.length === 0) {
+      return res.status(404).json({ error: "Sala no encontrada" });
+    }
+    
+    res.json(room[0]);
+  } catch (error) {
+    console.error("Error al obtener sala:", error);
+    res.status(500).json({ error: "Error al obtener la sala" });
+  }
+});
+
+// Modificar el endpoint usersInRoom para devolver más datos
+app.get('/usersInRoom', async function(req,res){
+    try {
+        const response = await realizarQuery(`
+            SELECT Users.userId, Users.username, Users.photo
+            FROM Users
+            INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
+            WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
+        `)
+        res.send(response)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: "Error al obtener usuarios" })
+    }
+})
+
 // Endpoint para obtener usuario por ID
 app.get('/user/:id', async (req, res) => {
   try {
@@ -523,6 +639,41 @@ app.post('/joinroom', async (req, res) => {
     console.error("Error al unirse a la sala:", error);
     res.status(500).send("Error al unirse a la sala");
   }
+});
+
+io.on("connection", (socket) => {
+    const req = socket.request;
+    
+    socket.on("joinRoom", (data) => {
+        if (req.session.room != undefined && req.session.room.length > 0) {
+            socket.leave(req.session.room);
+        }
+        req.session.room = data.room;
+        socket.join(req.session.room);
+        console.log("🚪 Usuario se unió a la sala:", req.session.room);
+        
+        // Notificar a todos en la sala que un jugador se unió
+        io.to(req.session.room).emit("playerJoined", {
+            room: req.session.room,
+            timestamp: new Date()
+        });
+    });
+
+    socket.on("startGame", (data) => {
+        console.log("🎮 Iniciando juego en sala:", data.room);
+        io.to(data.room).emit("gameStarted", { room: data.room });
+    });
+
+    socket.on("sendMessage", (data) => {
+        io.to(req.session.room).emit("newMessage", {
+            room: req.session.room,
+            message: data,
+        });
+    });
+
+    socket.on("disconnect", () => {
+        console.log("👋 Usuario desconectado");
+    });
 });
 
 
