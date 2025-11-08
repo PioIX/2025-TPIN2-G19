@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useEffect } from "react"
-import { useSocket } from "@/hooks/useSocket";
 import Button from "@/components/Button"
 import styles from "./lobby.module.css"
 
@@ -17,12 +16,12 @@ export default function Lobby() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
+
   //useEffect para guardar user_id
   useEffect(() => {
+    const userId = searchParams.get("user_id") || sessionStorage.getItem("userId")
     const fetchUser = async () => {
       try {
-        const userId = searchParams.get('user_id') || sessionStorage.getItem("userId")
-        
         if (!userId) {
           console.error("No se encontró user id")
           router.push("/login")
@@ -64,66 +63,32 @@ export default function Lobby() {
   }, [])
 
   //handleJoinRoom
-  const handleJoinRoom = async () => {
-    setError("")
-    setSuccess("")
-    
-    if (!joinCode.trim()) { //verifica que no esté vacío
-      setError("Ingrese el código de sala")
-      return
+ const handleJoinRoom = async () => {
+  const userId = sessionStorage.getItem("userId");
+  console.log(userId)
+
+  try {
+    const res = await fetch("http://localhost:4000/joinroom", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ joinCode, playerId: userId }),
+    });
+
+    const data = await res.json();
+    console.log(data)
+
+    if (!res.ok) {
+      setError(data.error || "Error al unirse a la sala");
+      return;
     }
 
-    if (joinCode.length !== 4) { //verifica que tenga 4 dígitos
-      setError("El código debe ser de 4 dígitos")
-      return
-    }
+    sessionStorage.setItem("joinCode", joinCode)
+    router.push(`/waitingroom?joinCode=${joinCode}`);
 
-    try {
-
-      const userId = sessionStorage.getItem("userId")
-
-      const res = await fetch("http://localhost:4000/joinroom", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          joinCode: joinCode,
-          playerId: userId,
-        }),
-      })
-
-      .then(response => response.json())
-      .then(data => {
-        console.log('datos: ', data)
-        const {roomId} = data
-        localStorage.setItem("roomId", roomId)
-        console.log("roomId: ", roomId)
-        router.push(`/tablero?joinCode=${joinCode}`);
-      });
-
-      /*if (!res.ok) {
-        const errText = res.text();
-        console.error("Error al unirse a la sala:", errText);
-        return alert(errText || "Error al unirse a la sala.");
-      }*/
-      
-
-      if (!res.ok) {
-        setError(data.error || "Error al unirse a la sala")
-        return
-      }
-
-      sessionStorage.setItem("gameRoomId", data.roomId)
-      setSuccess(`¡Uniéndose a "${data.roomName}"!`)
-      
-      setTimeout(() => {
-        router.push("/waitingroom")
-      }, 1000)
-
-    } catch (error) {
-      console.error("Error de red:", error)
-      setError("No se pudo conectar con el servidor")
-    }
+  } catch (error) {
+    setError("No se pudo conectar con el servidor");
   }
+};
 
 
   // handleCreateRoom
@@ -157,7 +122,7 @@ export default function Lobby() {
       }
 
       const { roomId } = data;
-      localStorage.setItem("roomId", roomId);
+      localStorage.setItem("gameRoomId", roomId);
       router.push(`/tablero`);
     } catch (error) {
       console.error("Error de red:", error);
@@ -240,3 +205,4 @@ export default function Lobby() {
   )
 
 }
+

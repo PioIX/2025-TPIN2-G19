@@ -15,67 +15,22 @@ export default function WaitingRoom() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [canStart, setCanStart] = useState(false)
 
-  useEffect(() => {
-    const fetchRoomData = async () => {
-      try {
-        const gameRoomId = sessionStorage.getItem("gameRoomId")
-        const userId = sessionStorage.getItem("userId")
-
-        if (!gameRoomId) {
-          router.push("/lobby")
-          return
-        }
-
-        // Obtener datos de la sala
-        const roomRes = await fetch(`http://localhost:4000/room/${gameRoomId}`)
-        if (!roomRes.ok) throw new Error("Sala no encontrada")
-        
-        const room = await roomRes.json()
-        setRoomData(room)
-        setIsAdmin(room.admin == userId)
-
-        // Obtener jugadores en la sala
-        fetchPlayers(gameRoomId)
-        
-      } catch (error) {
-        console.error("Error al obtener sala:", error)
-        router.push("/lobby")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchRoomData()
-  }, [router])
-
-  const fetchPlayers = async (gameRoomId) => {
-    try {
-      const res = await fetch(`http://localhost:4000/usersInRoom?gameRoomId=${gameRoomId}`)
-      if (!res.ok) throw new Error("Error al obtener jugadores")
-      
-      const data = await res.json()
-      setPlayers(data)
-      
-      // Verificar si todos los jugadores se unieron
-      if (roomData && data.length >= roomData.players) {
-        setCanStart(true)
-      }
-    } catch (error) {
-      console.error("Error al obtener jugadores:", error)
-    }
-  }
+  console.log("ENTRO A WAITING ROOM")
 
   // Socket: Escuchar cuando un jugador se une
   useEffect(() => {
+    console.log("entro al useEffect de socket")
     if (!socket || !isConnected) return
 
-    const gameRoomId = sessionStorage.getItem("gameRoomId")
-    if (gameRoomId) {
-      socket.emit("joinRoom", { room: gameRoomId })
+    const joinCode = sessionStorage.getItem("joinCode")
+    console.log(joinCode)
+    if (joinCode) {
+      socket.emit("joinRoom", { room: joinCode })
+      console.log("hizp el emit")
       
       socket.on("playerJoined", (data) => {
         console.log("Nuevo jugador se unió:", data)
-        fetchPlayers(gameRoomId)
+        fetchPlayers(joinCode)
       })
 
       socket.on("gameStarted", () => {
@@ -89,6 +44,60 @@ export default function WaitingRoom() {
       socket.off("gameStarted")
     }
   }, [socket, isConnected, roomData, router])
+
+  useEffect(() => {
+    const fetchRoomData = async () => {
+      try {
+        const joinCode = sessionStorage.getItem("joinCode")
+        console.log(joinCode)
+        const userId = sessionStorage.getItem("userId")
+
+        if (!joinCode) {
+          router.push(`/lobby?user_id=${userId}`)
+          return
+        }
+
+        // Obtener datos de la sala
+        const roomRes = await fetch(`http://localhost:4000/room?joinCode=${joinCode}`)
+        if (!roomRes.ok) throw new Error("Sala no encontrada")
+        
+        const room = await roomRes.json()
+        setRoomData(room)
+        setIsAdmin(room.admin == userId)
+
+        // Obtener jugadores en la sala
+        fetchPlayers(joinCode);
+        console.log("FUNCIONO!!!!")
+        
+      } catch (error) {
+        console.error("Error al obtener sala:", error)
+        router.push("/lobby")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRoomData()
+  }, [router])
+
+  const fetchPlayers = async (joinCode) => {
+    try {
+      const res = await fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
+      console.log("fetch players", res)
+      if (!res.ok) throw new Error("Error al obtener jugadores")
+      
+      const data = await res.json()
+      setPlayers(data)
+      console.log("data fetch players ", data)
+      
+      // Verificar si todos los jugadores se unieron
+      if (roomData && data.length >= roomData.players) {
+        setCanStart(true)
+      }
+    } catch (error) {
+      console.error("Error al obtener jugadores:", error)
+    }
+  }
 
   // Actualizar jugadores cada 3 segundos
   useEffect(() => {
