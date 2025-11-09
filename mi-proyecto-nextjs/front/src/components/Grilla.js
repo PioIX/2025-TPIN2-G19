@@ -18,7 +18,7 @@ import { useState , useEffect } from "react"
 }*/
 
 
-export default function Grilla (props){
+export default function Grilla ({currentUserId}){
     const tablero = [
         
         [1,3,3, 3, 3, 3, 4, 2, 4, 3, 3, 3, 3, 3, 3,3],
@@ -36,11 +36,76 @@ export default function Grilla (props){
         
         ];
 
-    const [userPosition, setUserPosition] = useState ({x:0,y:0})
-    const clickear = (x,y) => {
-        setUserPosition ({x, y});
-        console.log(userPosition)
-    }
+    const { socket, movePlayerOnBoard, changeToNextTurn } = useSocket();
+    
+    const [players, setPlayers] = useState([]);
+    const [currentTurn, setCurrentTurn] = useState(0);
+    const [possibleMoves, setPossibleMoves] = useState([]);
+    const [selectedMove, setSelectedMove] = useState(null);
+
+   useEffect(() => {
+        if (!socket) return;
+
+        socket.on("playerMoved", (data) => {
+            setPlayers(prev => prev.map(p => 
+                p.userId === data.userId 
+                    ? { ...p, position: data.newPosition }
+                    : p
+            ));
+            
+            if (data.userId === currentUserId) {
+                setPossibleMoves([]);
+                setSelectedMove(null);
+            }
+        });
+
+        socket.on("turnChanged", (data) => {
+            setCurrentTurn(data.currentTurn);
+        });
+
+        return () => {
+            socket.off("playerMoved");
+            socket.off("turnChanged");
+        };
+    }, [socket, currentUserId]);
+
+    useEffect(() => {
+        if (isMyTurn()) {
+            const currentPlayer = players.find(i => i.userId === currentUserId);
+            if (currentPlayer) {
+                const moves = calcularMovimientos(currentPlayer.position.x, currentPlayer.position.y,numeroObtenido);
+                setPossibleMoves(moves);
+            }
+        }
+    }, [numeroObtenido]);
+
+    const calcularMovimientos = (x, y, pasos) => {
+        const movimientos = [];
+        
+        const direcciones = [
+        { dx: -1, dy: 0 },  
+        { dx: 1, dy: 0 },   
+        { dx: 0, dy: -1 },  
+        { dx: 0, dy: 1 }    
+        ];
+        
+    };
+
+
+    const salidas = [
+        { x: 0, y: 7 },    
+        { x: 5, y: 0 },    
+        { x: 6, y: 15 }, 
+        { x: 11, y: 9 } 
+    ];
+
+    const jugadoresInicializados = users.map((user, index) => ({
+        userId: user.userId,
+        username: user.username,
+        photo: user.photo,
+        position: salidas[index % salidas.length], 
+        turnOrder: index  
+    }));
 
     return (
         <div className={styles.tablero}>
