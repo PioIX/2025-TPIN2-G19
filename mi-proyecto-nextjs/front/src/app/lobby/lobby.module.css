@@ -54,3 +54,38 @@
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
+
+.roomCode {
+  margin: 20px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  text-align: center;
+  color: white;
+}
+
+.code {
+  font-size: 48px;
+  font-weight: bold;
+  letter-spacing: 10px;
+  margin: 10px 0;
+  font-family: 'Courier New', monospace;
+}
+
+.error {
+  color: #ef4444;
+  background-color: #fee2e2;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.success {
+  color: #22c55e;
+  background-color: #dcfce7;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-align: center;
+}

@@ -26,11 +26,146 @@ console.log(`Servidor NodeJS corriendo en http://localhost:${port}/`);
 
 const io = require("socket.io")(server, {
 cors: {
-origin: ["http://localhost:3000", "http://localhost:3001"], // Permitir el origen localhost:3000
+origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"], // Permitir el origen localhost:3000
 methods: ["GET", "POST", "PUT", "DELETE"], // Métodos permitidos
 credentials: true, // Habilitar el envío de cookies
 },
 });
+
+const sessionMiddleware = session({
+  //Elegir tu propia key secreta
+  secret: "sebasnoentra",
+  resave: false,
+  saveUninitialized: false,
+});
+
+app.use(sessionMiddleware);
+io.use((socket, next) => {
+  sessionMiddleware(socket.request, {}, next);
+});
+
+
+//PROYECTO
+
+app.post('/createCode', async (req, res) => {
+  const { name, players, admin } = req.body;
+
+  console.log('📥 Petición recibida:', { name, players, admin });
+
+  try {
+    // Generar código único de 4 dígitos
+    let joinCode = Math.floor(1000 + Math.random() * 9000).toString();
+    console.log('🎲 Código generado:', joinCode);
+    
+    // Verificar que el código no exista ya
+    let existingRoom = await realizarQuery(`
+      SELECT * FROM GameRooms WHERE joinCode = '${joinCode}'
+    `);
+    
+    // Si existe, generar otro código (máximo 10 intentos)
+    let attempts = 0;
+    while (existingRoom.length > 0 && attempts < 10) {
+      joinCode = Math.floor(1000 + Math.random() * 9000).toString();
+      console.log('🔄 Código ya existe, generando nuevo:', joinCode);
+      existingRoom = await realizarQuery(`
+        SELECT * FROM GameRooms WHERE joinCode = '${joinCode}'
+      `);
+      attempts++;
+    }
+
+    if (attempts >= 10) {
+      console.error('❌ No se pudo generar código único después de 10 intentos');
+      return res.status(500).json({ error: "Error al generar código único" });
+    }
+
+    console.log('✅ Código único confirmado:', joinCode);
+
+    // Crear la sala con el código generado - IMPORTANTE: incluir joinCode en el INSERT
+    const insertQuery = `
+      INSERT INTO GameRooms (nameRoom, admin, players, joinCode)
+      VALUES ('${name}', ${admin}, ${players}, '${joinCode}')
+    `;
+
+    console.log('📝 Query:', insertQuery);
+    const response = await realizarQuery(insertQuery);
+    const roomId = response.insertId;
+
+    console.log('✅ Sala insertada con ID:', roomId);
+
+    // Insertar al admin en la sala
+    await realizarQuery(`
+      INSERT INTO UsersXRooms (userId, gameRoomId)
+      VALUES (${admin}, ${roomId})
+    `);
+
+    console.log('✅ Admin agregado a UsersXRooms');
+
+    // Verificar que el joinCode se guardó correctamente
+    const verificacion = await realizarQuery(`
+      SELECT * FROM GameRooms WHERE gameRoomId = ${roomId}
+    `);
+    
+    console.log('🔍 Verificación de sala creada:', verificacion[0]);
+
+    if (!verificacion[0].joinCode) {
+      console.error('⚠️ ALERTA: joinCode es NULL en la base de datos!');
+      return res.status(500).json({ error: "Error al guardar el código de sala" });
+    }
+
+    // Devolver respuesta
+    res.json({ 
+      roomId, 
+      joinCode: verificacion[0].joinCode, // Usar el joinCode de la verificación
+      mensaje: "Sala creada con éxito" 
+    });
+
+  } catch (error) {
+    console.error("💥 Error al crear la sala:", error);
+    res.status(500).json({ error: "Error al crear la sala: " + error.message });
+  }
+});
+
+
+
+// Agregar este endpoint nuevo
+app.get('/room', async (req, res) => {
+  const { joinCode } = req.query;
+  
+  try {
+    const room = await realizarQuery(`
+      SELECT * FROM GameRooms WHERE joinCode = ${joinCode}
+    `);
+    console.log("ROOM ENDPOINT: ", room);
+    
+    if (room.length === 0) {
+      return res.status(404).json({ error: "Sala no encontrada" });
+    }
+    
+    res.json(room[0]);
+  } catch (error) {
+    console.error("Error al obtener sala:", error);
+    res.status(500).json({ error: "Error al obtener la sala" });
+  }
+});
+
+// Modificar el endpoint usersInRoom para devolver más datos
+app.get('/usersInRoom', async function(req,res){
+  const { joinCode } = req.query;
+    try {
+        const response = await realizarQuery(`
+            SELECT Users.userId, Users.username, Users.photo
+            FROM Users
+            INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
+            INNER JOIN GameRooms on GameRooms.gameRoomId= UsersXRooms.gameRoomId
+            WHERE GameRooms.joinCode = ${joinCode};  
+        `)
+        console.log("Usuarios dentro de la sala: ", response)
+        res.send(response)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: "Error al obtener usuarios" })
+    }
+})
 
 // Endpoint para obtener usuario por ID
 app.get('/user/:id', async (req, res) => {
@@ -64,17 +199,6 @@ app.get('/user/:id', async (req, res) => {
   }
 })
 
-const sessionMiddleware = session({
-//Elegir tu propia key secreta
-secret: "sebasnoentra",
-resave: false,
-saveUninitialized: false,
-});
-
-app.use(sessionMiddleware);
-io.use((socket, next) => {
-sessionMiddleware(socket.request, {}, next);
-});
 
 // -------------- aca comienza el proyecto del chat
 
@@ -264,37 +388,6 @@ app.delete('/deleteUsersInRoom', async function (req,res) {
   }
 })
 
-// SOCKET
-
-
-io.on("connection", (socket) => {
-    const req = socket.request;
-    socket.on("joinRoom", (data) => {
-        if (req.session.room != undefined && req.session.room.length > 0)
-            socket.leave(req.session.room);
-            req.session.room = data.room;
-            socket.join(req.session.room);
-            console.log("🚀 ~ io.on ~ req.session.room:", req.session.room);
-            io.to(req.session.room).emit("chat-messages", {
-                user: req.session.user,
-                room: req.session.room,
-        });
-    });
-    socket.on("pingAll", (data) => {
-        console.log("PING ALL: ", data);
-        io.emit("pingAll", { event: "Ping to all", message: data });
-    });
-   socket.on("sendMessage", (data) => {
-        io.to(req.session.room).emit("newMessage", {
-            room: req.session.room,
-            message: data,
-        });
-    });
-    socket.on("disconnect", () => {
-        console.log("Disconnect");
-    });
-});
-
 app.post('/crearSala', async (req, res) => {
   const { nameRoom, adminId, players, rooms } = req.body; // Recibir datos desde el frontend
 
@@ -454,7 +547,7 @@ app.post('/login', async (req, res) => {
 
 app.post('/createroom', async (req, res) => {
   const { name, players, admin } = req.body;
-
+  console.log({ name, players, admin })
   try {
     // Crear la sala
     const insertQuery = `
@@ -469,89 +562,115 @@ app.post('/createroom', async (req, res) => {
     INSERT INTO UsersXRooms (userId, gameRoomId)
     VALUES (${admin}, ${roomId})
     `);
-
-    res.send({ roomId });
+      console.log(roomId)
+    res.send({ roomId: roomId });
   } catch (error) {
     console.error("Error al crear la sala:", error);
     res.status(500).send("Error al crear la sala");
   }
 });
 
-
 app.post('/joinroom', async (req, res) => {
-  const { joinCode, playerId } = req.body; // joinCode = gameRoomId
-  console.log(joinCode, playerId)
+  const { joinCode, playerId } = req.body;
 
   try {
-    // Verificar que la sala existe
+    // Buscar sala por joinCode
     const roomResponse = await realizarQuery(`
-      SELECT * FROM GameRooms WHERE gameRoomId = ${joinCode}
+      SELECT * FROM GameRooms WHERE joinCode = ${joinCode}
     `);
+    console.log(roomResponse)
 
-    if (roomResponse.length< 0) {
-      return res.status(404).send("Sala no encontrada");
+    if (roomResponse.length === 0) {
+      return res.status(404).send({ error: "Sala no encontrada" });
     }
 
-    const room = roomResponse[0];
+    const room = roomResponse[0]; // acá tenés gameRoomId también
 
-    // Contar cuántos jugadores ya están en la sala
-    const playersResponse = await realizarQuery(`
-      SELECT COUNT(*) as count FROM UsersXRooms WHERE gameRoomId = ${joinCode}
+    // Verificar si el usuario ya está en ESTA sala
+    const alreadyJoined = await realizarQuery(`
+      SELECT * FROM UsersXRooms 
+      WHERE userId = ${playerId} AND gameRoomId = ${room.gameRoomId}
     `);
-
-    const currentPlayers = playersResponse[0].count;
-
-    // Verificar que el jugador no esté ya en la sala
-    /*const alreadyJoined = await realizarQuery(`
-      SELECT * FROM UsersXRooms WHERE gameRoomId = ${joinCode} AND userId = ${playerId}
-    `);
-
-    console.log("alreadyJoin: ", alreadyJoined)
 
     if (alreadyJoined.length > 0) {
-      return res.status(400).send("Ya estás en esta sala");
-    }*/
+      return res.status(400).send({ error: "Ya estás en esta sala" });
+    }
 
-    // Insertar al jugador en la tabla relacional
+    // Insertar en UsersXRooms usando gameRoomId REAL
     await realizarQuery(`
       INSERT INTO UsersXRooms (userId, gameRoomId)
-      VALUES (${playerId}, ${joinCode})
+      VALUES (${playerId}, ${room.gameRoomId})
     `);
 
-    res.send({ mensaje: "Unido a la sala con éxito", roomId: joinCode });
+    res.send({
+      mensaje: "Unido a la sala con éxito",
+      roomId: room.joinCode,     // <-- esto se guarda en el front
+      gameRoomId: room.gameRoomId // <-- si lo necesitás después
+    });
 
   } catch (error) {
     console.error("Error al unirse a la sala:", error);
-    res.status(500).send("Error al unirse a la sala");
+    res.status(500).send({ error: "Error al unirse a la sala" });
   }
 });
 
 
+//SOCKET
+
 io.on("connection", (socket) => {
     const req = socket.request;
+    
     socket.on("joinRoom", (data) => {
-        if (req.session.room != undefined && req.session.room.length > 0)
+        if (req.session.room != undefined && req.session.room.length > 0) {
             socket.leave(req.session.room);
-            req.session.room = data.room;
-            socket.join(req.session.room);
-            console.log("🚀 ~ io.on ~ req.session.room:", req.session.room);
-            io.to(req.session.room).emit("chat-messages", {
-                user: req.session.user,
-                room: req.session.room,
+        }
+        req.session.room = data.room;
+        socket.join(req.session.room);
+        socket.playerId = data.playerId;
+        socket.joinCode = data.joinCode;
+        
+        console.log("✅ Datos guardados:");
+        console.log("   - room:", req.session.room);
+        console.log("   - playerId:", socket.playerId);
+        console.log("   - joinCode:", socket.joinCode);
+        console.log("🚪 Usuario se unió a la sala:", req.session.room);
+        // Notificar a todos en la sala que un jugador se unió
+        io.to(req.session.room).emit("playerJoined", {
+            room: req.session.room,
+            timestamp: new Date()
         });
     });
-    socket.on("pingAll", (data) => {
-        console.log("PING ALL: ", data);
-        io.emit("pingAll", { event: "Ping to all", message: data });
+
+    socket.on("startGame", (data) => {
+        console.log("🎮 Iniciando juego en sala:", data.room);
+        io.to(data.room).emit("gameStarted", { room: data.room });
     });
-   socket.on("sendMessage", (data) => {
+
+    socket.on("sendMessage", (data) => {
         io.to(req.session.room).emit("newMessage", {
             room: req.session.room,
             message: data,
         });
     });
-    socket.on("disconnect", () => {
-        console.log("Disconnect");
-    });
-});
 
+    socket.on("disconnect", async () => {
+        console.log("Disconnect");
+        console.log(socket.playerId, socket.joinCode)
+        if (socket.playerId && socket.joinCode) {
+          try {
+            await realizarQuery(`
+              DELETE UsersXRooms 
+              FROM UsersXRooms
+              INNER JOIN GameRooms ON GameRooms.gameRoomId = UsersXRooms.gameRoomId
+              WHERE UsersXRooms.userId = ${socket.playerId} AND GameRooms.joinCode = ${socket.joinCode}
+            `);
+            io.to(socket.joinCode).emit('playerLeft', { 
+              playerId: socket.playerId
+            });
+            console.log("👋 ID del usuario que salió de la sala: ", socket.playerId)
+          } catch (error) {
+            console.error("Error al eliminar usuario al desconectar:", error);
+          }
+        }
+    });
+});
