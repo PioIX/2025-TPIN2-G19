@@ -16,7 +16,6 @@ export default function Lobby() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-
   //useEffect para guardar user_id
   useEffect(() => {
     const userId = searchParams.get("user_id") || sessionStorage.getItem("userId")

@@ -23,11 +23,10 @@ export default function WaitingRoom() {
     if (!socket || !isConnected) return
 
     const joinCode = sessionStorage.getItem("joinCode")
+    const userId = sessionStorage.getItem("userId")
     console.log(joinCode)
     if (joinCode) {
-      socket.emit("joinRoom", { room: joinCode })
-      console.log("hizp el emit")
-      
+      socket.emit("joinRoom", { room: joinCode, playerId:userId, joinCode:joinCode })
       socket.on("playerJoined", (data) => {
         console.log("Nuevo jugador se unió:", data)
         fetchPlayers(joinCode)
@@ -66,12 +65,10 @@ export default function WaitingRoom() {
         setIsAdmin(room.admin == userId)
 
         // Obtener jugadores en la sala
-        fetchPlayers(joinCode);
-        console.log("FUNCIONO!!!!")
-        
+        fetchPlayers(joinCode)
       } catch (error) {
         console.error("Error al obtener sala:", error)
-        router.push("/lobby")
+        router.push("/lobby?user_id=" + sessionStorage.getItem("userId"))
       } finally {
         setLoading(false)
       }
@@ -91,8 +88,10 @@ export default function WaitingRoom() {
       console.log("data fetch players ", data)
       
       // Verificar si todos los jugadores se unieron
-      if (roomData && data.length >= roomData.players) {
+      if (roomData && data.length == roomData.players) {
         setCanStart(true)
+        console.log("Todos los jugadores se han unido. El juego puede comenzar.")
+        router.push("/tablero")
       }
     } catch (error) {
       console.error("Error al obtener jugadores:", error)
