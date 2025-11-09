@@ -26,11 +26,26 @@ console.log(`Servidor NodeJS corriendo en http://localhost:${port}/`);
 
 const io = require("socket.io")(server, {
 cors: {
-origin: ["http://localhost:3000", "http://localhost:3001"], // Permitir el origen localhost:3000
+origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"], // Permitir el origen localhost:3000
 methods: ["GET", "POST", "PUT", "DELETE"], // Métodos permitidos
 credentials: true, // Habilitar el envío de cookies
 },
 });
+
+const sessionMiddleware = session({
+  //Elegir tu propia key secreta
+  secret: "sebasnoentra",
+  resave: false,
+  saveUninitialized: false,
+});
+
+app.use(sessionMiddleware);
+io.use((socket, next) => {
+  sessionMiddleware(socket.request, {}, next);
+});
+
+
+//PROYECTO
 
 app.post('/createCode', async (req, res) => {
   const { name, players, admin } = req.body;
@@ -144,7 +159,7 @@ app.get('/usersInRoom', async function(req,res){
             INNER JOIN GameRooms on GameRooms.gameRoomId= UsersXRooms.gameRoomId
             WHERE GameRooms.joinCode = ${joinCode};  
         `)
-        console.log("aaaaaaaaa", response)
+        console.log("Usuarios dentro de la sala: ", response)
         res.send(response)
     } catch (error) {
         console.log(error)
@@ -184,17 +199,6 @@ app.get('/user/:id', async (req, res) => {
   }
 })
 
-const sessionMiddleware = session({
-//Elegir tu propia key secreta
-secret: "sebasnoentra",
-resave: false,
-saveUninitialized: false,
-});
-
-app.use(sessionMiddleware);
-io.use((socket, next) => {
-sessionMiddleware(socket.request, {}, next);
-});
 
 // -------------- aca comienza el proyecto del chat
 
@@ -384,37 +388,6 @@ app.delete('/deleteUsersInRoom', async function (req,res) {
   }
 })
 
-// SOCKET
-
-
-io.on("connection", (socket) => {
-    const req = socket.request;
-    socket.on("joinRoom", (data) => {
-        if (req.session.room != undefined && req.session.room.length > 0)
-            socket.leave(req.session.room);
-            req.session.room = data.room;
-            socket.join(req.session.room);
-            console.log("🚀 ~ io.on ~ req.session.room:", req.session.room);
-            io.to(req.session.room).emit("chat-messages", {
-                user: req.session.user,
-                room: req.session.room,
-        });
-    });
-    socket.on("pingAll", (data) => {
-        console.log("PING ALL: ", data);
-        io.emit("pingAll", { event: "Ping to all", message: data });
-    });
-   socket.on("sendMessage", (data) => {
-        io.to(req.session.room).emit("newMessage", {
-            room: req.session.room,
-            message: data,
-        });
-    });
-    socket.on("disconnect", () => {
-        console.log("Disconnect");
-    });
-});
-
 app.post('/crearSala', async (req, res) => {
   const { nameRoom, adminId, players, rooms } = req.body; // Recibir datos desde el frontend
 
@@ -597,7 +570,6 @@ app.post('/createroom', async (req, res) => {
   }
 });
 
-
 app.post('/joinroom', async (req, res) => {
   const { joinCode, playerId } = req.body;
 
@@ -643,6 +615,8 @@ app.post('/joinroom', async (req, res) => {
 });
 
 
+//SOCKET
+
 io.on("connection", (socket) => {
     const req = socket.request;
     
@@ -652,8 +626,14 @@ io.on("connection", (socket) => {
         }
         req.session.room = data.room;
         socket.join(req.session.room);
-        console.log("🚪 Usuario se unió a la sala:", req.session.room);
+        socket.playerId = data.playerId;
+        socket.joinCode = data.joinCode;
         
+        console.log("✅ Datos guardados:");
+        console.log("   - room:", req.session.room);
+        console.log("   - playerId:", socket.playerId);
+        console.log("   - joinCode:", socket.joinCode);
+        console.log("🚪 Usuario se unió a la sala:", req.session.room);
         // Notificar a todos en la sala que un jugador se unió
         io.to(req.session.room).emit("playerJoined", {
             room: req.session.room,
@@ -673,36 +653,24 @@ io.on("connection", (socket) => {
         });
     });
 
-    socket.on("disconnect", () => {
-        console.log("👋 Usuario desconectado");
-    });
-});
-
-
-io.on("connection", (socket) => {
-    const req = socket.request;
-    socket.on("joinRoom", (data) => {
-        if (req.session.room != undefined && req.session.room.length > 0)
-            socket.leave(req.session.room);
-            req.session.room = data.room;
-            socket.join(req.session.room);
-            console.log("🚀 ~ io.on ~ req.session.room:", req.session.room);
-            io.to(req.session.room).emit("chat-messages", {
-                user: req.session.user,
-                room: req.session.room,
-        });
-    });
-    socket.on("pingAll", (data) => {
-        console.log("PING ALL: ", data);
-        io.emit("pingAll", { event: "Ping to all", message: data });
-    });
-   socket.on("sendMessage", (data) => {
-        io.to(req.session.room).emit("newMessage", {
-            room: req.session.room,
-            message: data,
-        });
-    });
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
         console.log("Disconnect");
-    });
+        console.log(socket.playerId, socket.joinCode)
+        if (socket.playerId && socket.joinCode) {
+          try {
+            await realizarQuery(`
+              DELETE UsersXRooms 
+              FROM UsersXRooms
+              INNER JOIN GameRooms ON GameRooms.gameRoomId = UsersXRooms.gameRoomId
+              WHERE UsersXRooms.userId = ${socket.playerId} AND GameRooms.joinCode = ${socket.joinCode}
+            `);
+            io.to(socket.joinCode).emit('playerLeft', { 
+              playerId: socket.playerId
+            });
+            console.log("👋 ID del usuario que salió de la sala: ", socket.playerId)
+          } catch (error) {
+            console.error("Error al eliminar usuario al desconectar:", error);
+          }
+        }
+    });
 });

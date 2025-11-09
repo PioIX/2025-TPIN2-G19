@@ -84,10 +84,14 @@ const useSocket = (options = { withCredentials: true }, serverUrl = "http://loca
   // ========== FUNCIONES PARA WAITING ROOM ==========
 
   // Unirse a una sala
-  const joinRoom = (roomId) => {
+  const joinRoom = (roomId, playerId, joinCode) => {
     if (socket && isConnected) {
-      socket.emit('joinRoom', { room: roomId });
-      console.log('🚪 Uniéndose a la sala:', roomId);
+      socket.emit('joinRoom', {
+        room: roomId,
+        playerId: playerId,
+        joinCode: joinCode
+      });
+      console.log('🚪 Uniéndose a la sala:', roomId, 'playerId: ', playerId, 'joinCode', joinCode);
     }
   };
 

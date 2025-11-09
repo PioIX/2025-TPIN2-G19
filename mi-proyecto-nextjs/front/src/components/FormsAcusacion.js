@@ -3,6 +3,7 @@
 import React from "react"
 import clsx from "clsx"
 import styles from "./FormsAcusacion.module.css"
+import Button from "@/components/Button"
 import { useState , useEffect } from "react"
 
 
@@ -30,6 +31,10 @@ export default function FormsAcusacion({ porps }) {
     evento.preventDefault();
     onSubmit({ seleccion1, seleccion2, seleccion3 });
   };
+
+  async function manejarEnvio(event) {
+
+  }
 
   return (
     <form onSubmit={manejarEnvio}>
@@ -65,7 +70,7 @@ export default function FormsAcusacion({ porps }) {
         </select>
       </div>
       <button type="submit">Acusar</button>
-      <button onClick={porps.onClick}>Volver</button>
+      <Button /*onClick={onClick}*/>Volver</Button>
     </form>
   )
 }
