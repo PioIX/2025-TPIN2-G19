@@ -653,6 +653,44 @@ io.on("connection", (socket) => {
         });
     });
 
+    socket.on("initializeGame", async (data) => {
+    const { joinCode } = data;
+    
+    try {
+        const users = await realizarQuery(`
+            SELECT Users.userId, Users.username
+            FROM Users
+            INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
+            INNER JOIN GameRooms ON GameRooms.gameRoomId = UsersXRooms.gameRoomId
+            WHERE GameRooms.joinCode = ${joinCode}
+        `);
+        
+        // Las 4 salidas (casillas con valor 2)
+        const salidas = [
+            { x: 0, y: 7 },
+            { x: 5, y: 0 },
+            { x: 6, y: 15 },
+            { x: 11, y: 9 }
+        ];
+        
+        // Asignar cada jugador a una salida
+        const jugadores = users.map((user, index) => ({
+            userId: user.userId,
+            username: user.username,
+            position: salidas[index % salidas.length],
+            turnOrder: index
+        }));
+        
+        io.to(joinCode).emit("gameInitialized", {
+            players: jugadores,
+            currentTurn: 0
+        });
+        
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    });
+
     socket.on("disconnect", async () => {
         console.log("Disconnect");
         console.log(socket.playerId, socket.joinCode)
