@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 const tipo = "checkbox"
 import Button from "@/components/Button"
@@ -35,15 +35,17 @@ export default function Tablero() {
     useEffect(() => {
         if (!socket || !isConnected) return
 
-        const joinCode = sessionStorage.getItem("joinCode")
-        const userId = sessionStorage.getItem("userId")
+        console.log("joinCode en tablero:", joinCode)
+        console.log("userId en tablero:", userId)
 
         if (!joinCode || !userId) {
-        router.push("/lobby")
-        return
+            router.push("/lobby")
+            return
         }
 
         console.log("Conectado al tablero")
+
+        setJugadores.push(userId)
 
         // Unirse a la sala
         socket.emit("joinRoom", { 
@@ -93,18 +95,11 @@ export default function Tablero() {
             setNumeroObtenido(0) // Resetear el dado
         })
 
-        // Si alguien se desconecta
-        socket.on("playerLeft", (data) => {
-            alert("Un jugador abandonó el juego")
-            router.push("/lobby")
-        })
-
         return () => {
             socket.off("gameInitialized")
             socket.off("diceRolled")
             socket.off("playerMoved")
             socket.off("turnChanged")
-            socket.off("playerLeft")
         }
     }, [socket, isConnected, router])
 
