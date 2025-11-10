@@ -11,19 +11,113 @@ import clsx from 'clsx';
 import Usuarios from "@/components/Usuarios"; 
 import { cardsCharacters, cardsWeapons, cardsRooms } from "@/classes/Card";
 import FormsAcusacion from "@/components/FormsAcusacion";
+import { useSocket } from "@/hooks/useSocket";
 
 
 export default function Tablero() {
     const [usersInRoom, setUsersInRoom] = useState([])
-    //const [numeroObtenido, setNumeroObtenido] = useState(0)
-    let numeroObtenido=0
+    const [jugadores, setJugadores] = useState([])
+    const [turnoActual, setTurnoActual] = useState(0)
+    const [miIndice, setMiIndice] = useState(null)
     
+    const router = useRouter()
+    const { socket, isConnected } = useSocket()
+    const joinCode = sessionStorage.getItem("joinCode")
+    const userId = sessionStorage.getItem("userId")
+    const [numeroObtenido, setNumeroObtenido] = useState(0)    
     /*useEffect(()=> {
         fetch('http://localhost:4000/usersInRoom')
         .then(response => response.json)
         .then(data => setUsersInRoom(data))
         .then(console.log("usersInRoom: ", usersInRoom))
     }, [usersInRoom])*/
+
+    useEffect(() => {
+        if (!socket || !isConnected) return
+
+        const joinCode = sessionStorage.getItem("joinCode")
+        const userId = sessionStorage.getItem("userId")
+
+        if (!joinCode || !userId) {
+        router.push("/lobby")
+        return
+        }
+
+        console.log("Conectado al tablero")
+
+        // Unirse a la sala
+        socket.emit("joinRoom", { 
+        room: joinCode, 
+        playerId: userId, 
+        joinCode: joinCode 
+        })
+
+        // Inicializar el juego
+        socket.emit("initializeGame", { joinCode })
+
+        // ===== LISTENERS DEL SOCKET =====
+
+        // Cuando el juego se inicializa
+        socket.on("gameInitialized", (data) => {
+            console.log("Juego inicializado:", data)
+            setJugadores(data.players)
+            setTurnoActual(data.currentTurn)
+            
+            // Encontrar mi índice
+            const miIdx = data.players.findIndex(p => p.userId == userId)
+            setMiIndice(miIdx)
+        })
+
+        // Cuando alguien tira el dado
+        socket.on("diceRolled", (data) => {
+            console.log("Dado tirado:", data)
+            setNumeroObtenido(data.result)
+        })
+
+        // Cuando un jugador se mueve
+        socket.on("playerMoved", (data) => {
+            console.log("Jugador movido:", data)
+            setJugadores(prev => 
+                prev.map(p => 
+                    p.userId === data.playerId 
+                        ? { ...p, position: data.newPosition }
+                        : p
+                )
+            )
+        })
+
+        // Cuando cambia el turno
+        socket.on("turnChanged", (data) => {
+            console.log("Turno cambiado:", data)
+            setTurnoActual(data.currentTurn)
+            setNumeroObtenido(0) // Resetear el dado
+        })
+
+        // Si alguien se desconecta
+        socket.on("playerLeft", (data) => {
+            alert("Un jugador abandonó el juego")
+            router.push("/lobby")
+        })
+
+        return () => {
+            socket.off("gameInitialized")
+            socket.off("diceRolled")
+            socket.off("playerMoved")
+            socket.off("turnChanged")
+            socket.off("playerLeft")
+        }
+    }, [socket, isConnected, router])
+
+    const moverJugador = (nuevaPosicion) => {
+        const joinCode = sessionStorage.getItem("joinCode")
+        const userId = sessionStorage.getItem("userId")
+
+        socket.emit("movePlayer", {
+            joinCode,
+            playerId: userId,
+            newPosition: nuevaPosicion
+        })
+    }
 
     function getRandomIntInclusive(min, max) {
         min = Math.ceil(min)
@@ -32,7 +126,7 @@ export default function Tablero() {
     }
 
     function obtenerNumeroAleatorio () {
-        numeroObtenido = getRandomIntInclusive(1, 6)
+        setNumeroObtenido(getRandomIntInclusive(1, 6))
         console.log(numeroObtenido)
     }
     
@@ -97,8 +191,6 @@ export default function Tablero() {
     async function volver() {
         console.log("jhsdsjdh");
     }
-
-
     
     const categorieSospechosos = ["Coronel Mostaza", "pepip", "asdasd"];
     const categoriesArmas = ["Coronel Mostaza", "pepip", "asdasd"];
@@ -141,7 +233,13 @@ export default function Tablero() {
 
             <div className={styles["pagina-tablero"]}>
                 <Anotador></Anotador>
-                <Grilla onClick={() => clickear(filaIndex, colIndex)}></Grilla>
+                <Grilla 
+                    currentUserId={userId}
+                    players={jugadores}
+                    currentTurn={turnoActual}
+                    numeroObtenido={numeroObtenido}
+                    onMoverJugador={moverJugador}
+                />
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
                 <FormsAcusacion onClick={volver} onSubmit={handleAcusacion}></FormsAcusacion>
