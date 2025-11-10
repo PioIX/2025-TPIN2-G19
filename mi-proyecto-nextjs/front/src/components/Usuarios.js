@@ -7,23 +7,23 @@ export default function Usuarios (props) {
 
     const [users, setUsers] = useState([]);
     const [photos, setPhotos] = useState([]);
-    const gameRoomId = localStorage.getItem("gameRoomId");
+    const joinCode=sessionStorage.getItem("joinCode")
 
-    async function obtenerUsuarios() {
+    /*async function obtenerUsuarios() {
       try {
-        fetch(`http://localhost:4000/usersInRoom?gameRoomId=${gameRoomId}`)
+        fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
           .then(response => response.json())
-          .then(data => (console.log(data)))
-          setUsers(data)
+          .then((console.log(response)))
+          setUsers(response)
           console.log(users)
       } catch (err) {
-        console.error("Error al conectar con el servidor:", err)
+        console.error("Error al obtener usuarios:", err)
       }
-    };
+    };*/
 
     async function obtenerFotos() {
       try {
-        const res = await fetch(`http://localhost:4000/photoUsersInRoom?gameRoomId=${gameRoomId}`)
+        const res = await fetch(`http://localhost:4000/photoUsersInRoom?joinCode=${joinCode}`)
         if (!res.ok) throw new Error("Error al obtener fotos")
         const data = await res.json()
         setPhotos(data)
@@ -33,10 +33,10 @@ export default function Usuarios (props) {
     };
 
     // Este useEffect se ejecutará solo una vez cuando el componente se monte
-    useEffect(() => {
-      obtenerUsuarios();
-      obtenerFotos();
-    }, []); // El arreglo vacío asegura que solo se ejecute una vez
+  /*useEffect(() => {
+    obtenerUsuarios();
+    obtenerFotos();
+  }, []);*/ // El arreglo vacío asegura que solo se ejecute una vez
 
     return (
         <>

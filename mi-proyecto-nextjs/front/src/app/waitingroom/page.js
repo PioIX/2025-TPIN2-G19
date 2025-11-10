@@ -36,7 +36,7 @@ export default function WaitingRoom() {
 
       socket.on("gameStarted", () => {
         console.log("¡El juego ha comenzado!")
-        router.push(`/tablero`)
+        router.push(`/tablero?joinCode=${joinCode}`)
       })
     }
 
