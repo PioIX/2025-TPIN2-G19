@@ -46,7 +46,7 @@ export default function Grilla ({currentUserId, players, currentTurn, numeroObte
 
     const pasarTurno = () => {
     const nextTurn = (currentTurn + 1) % players.length;
-    changeToNextTurn(joinCode, nextTurn, setCurrentTurn);
+    changeToNextTurn(joinCode, nextTurn);
     };
 
     const calcularMovimientos = (x, y, pasos) => {
