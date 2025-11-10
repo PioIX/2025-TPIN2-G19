@@ -1,0 +1,76 @@
+.fondo {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #c9f59c; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+
+.signinContainer {
+  background: #e9ffc7; 
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+  width: 320px;
+  text-align: center;
+}
+
+.signinContainer h2 {
+  margin-bottom: 1.5rem;
+  color: #2d572c;
+}
+
+.signinContainer label {
+  display: block;
+  text-align: left;
+  font-weight: bold;
+  margin: 0.5rem 0 0.3rem;
+  color: #355e3b;
+}
+
+.signinContainer input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #a4d37a;
+  margin-bottom: 1rem;
+  transition: 0.3s;
+}
+
+.signinContainer input:focus {
+  outline: none;
+  border: 1px solid #6ab04c;
+  box-shadow: 0px 0px 6px rgba(106, 176, 76, 0.5);
+}
+
+.signinContainer button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #6ab04c;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.signinContainer button:hover {
+  background: #558b2f;
+}
+
+.signinContainer p {
+  margin-top: 5%;
+}
+
+.signinContainer a {
+  color: blue;
+  text-decoration: underline;
+}
+
+.signinContainer a:hover {
+  color: rgb(0, 0, 128);
+}

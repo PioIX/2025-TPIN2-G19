@@ -18,7 +18,7 @@ import { useState , useEffect } from "react"
 }*/
 
 
-export default function Grilla ({currentUserId}){
+export default function Grilla ({currentUserId, players, currentTurn, numeroObtenido, onMoverJugador }){
     const tablero = [
         
         [1,3,3, 3, 3, 3, 4, 2, 4, 3, 3, 3, 3, 3, 3,3],
@@ -34,12 +34,8 @@ export default function Grilla ({currentUserId}){
         [3,3,3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 3, 3, 3,3],
         [3,3,3, 3, 3, 3, 3, 3, 4, 2, 3, 3, 3, 3, 3,1]
         
-        ];
+    ];
 
-    const { movePlayerOnBoard, changeToNextTurn } = useSocket();
-    
-    const [players, setPlayers] = useState([]);
-    const [currentTurn, setCurrentTurn] = useState(0);
     const [possibleMoves, setPossibleMoves] = useState([]);
     const [selectedMove, setSelectedMove] = useState(null);  
 
@@ -90,8 +86,9 @@ export default function Grilla ({currentUserId}){
     };
 
     const moverJugador = (nuevaPosicion) => {
-        movePlayerOnBoard(joinCode, currentUserId, nuevaPosicion);
-        pasarTurno();
+        onMoverJugador(nuevaPosicion);
+        setSelectedMove(null);
+        setPossibleMoves([]);
     };
 
     const seleccionarCasilla = (x, y) => {
@@ -121,6 +118,7 @@ export default function Grilla ({currentUserId}){
     }
     }, [numeroObtenido]);
 
+    const userPosition = players.find(p => p.userId == currentUserId)?.position || { x: -1, y: -1 };
 
     return (
         <>
@@ -135,6 +133,9 @@ export default function Grilla ({currentUserId}){
             if (casilla === 4) clase = "casillaNormal";
             if (casilla === 5) clase = "entrada", textoCasilla = "entrada";
             if (userPosition.x === filaIndex && userPosition.y === colIndex) clase = ' usuario';
+            const isPossible = possibleMoves.some(m => m.x === filaIndex && m.y === colIndex);
+            if (isPossible) clase += ' posible'; 
+            if (selectedMove && selectedMove.x === filaIndex && selectedMove.y === colIndex) clase += ' seleccionado';
             return <div key={`${filaIndex}-${colIndex}`} className={styles[clase]} onClick={() => seleccionarCasilla(filaIndex, colIndex)}>{textoCasilla}</div>;
         })
         )}
