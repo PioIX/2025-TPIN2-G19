@@ -24,9 +24,11 @@ export default function WaitingRoom() {
 
     const joinCode = sessionStorage.getItem("joinCode")
     const userId = sessionStorage.getItem("userId")
-    console.log(joinCode)
+    console.log("Socket joinCode:", joinCode)
+    
     if (joinCode) {
-      socket.emit("joinRoom", { room: joinCode, playerId:userId, joinCode:joinCode })
+      socket.emit("joinRoom", { room: joinCode, playerId: userId, joinCode: joinCode })
+      
       socket.on("playerJoined", (data) => {
         console.log("Nuevo jugador se unió:", data)
         fetchPlayers(joinCode)
@@ -42,30 +44,39 @@ export default function WaitingRoom() {
       socket.off("playerJoined")
       socket.off("gameStarted")
     }
-  }, [socket, isConnected, roomData, router])
+  }, [socket, isConnected, router])
 
   useEffect(() => {
     const fetchRoomData = async () => {
       try {
         const joinCode = sessionStorage.getItem("joinCode")
-        console.log(joinCode)
         const userId = sessionStorage.getItem("userId")
+        
+        console.log("Fetching room data con joinCode:", joinCode)
 
         if (!joinCode) {
+          console.log("No hay joinCode, redirigiendo al lobby")
           router.push(`/lobby?user_id=${userId}`)
           return
         }
 
         // Obtener datos de la sala
         const roomRes = await fetch(`http://localhost:4000/room?joinCode=${joinCode}`)
-        if (!roomRes.ok) throw new Error("Sala no encontrada")
+        console.log("Room response status:", roomRes.status)
+        
+        if (!roomRes.ok) {
+          console.error("Error al obtener sala, status:", roomRes.status)
+          throw new Error("Sala no encontrada")
+        }
         
         const room = await roomRes.json()
+        console.log("Room data obtenida:", room)
+        
         setRoomData(room)
         setIsAdmin(room.admin == userId)
 
         // Obtener jugadores en la sala
-        fetchPlayers(joinCode)
+        await fetchPlayers(joinCode)
       } catch (error) {
         console.error("Error al obtener sala:", error)
         router.push("/lobby?user_id=" + sessionStorage.getItem("userId"))
@@ -79,31 +90,33 @@ export default function WaitingRoom() {
 
   const fetchPlayers = async (joinCode) => {
     try {
+      console.log("Fetching players con joinCode:", joinCode)
       const res = await fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
-      console.log("fetch players", res)
+      console.log("fetch players response:", res)
+      
       if (!res.ok) throw new Error("Error al obtener jugadores")
       
       const data = await res.json()
+      console.log("data fetch players:", data)
       setPlayers(data)
-      console.log("data fetch players ", data)
       
       // Verificar si todos los jugadores se unieron
       if (roomData && data.length == roomData.players) {
         setCanStart(true)
         console.log("Todos los jugadores se han unido. El juego puede comenzar.")
-        router.push("/tablero")
       }
     } catch (error) {
       console.error("Error al obtener jugadores:", error)
     }
   }
 
-  // Actualizar jugadores cada 3 segundos
+  // Actualizar jugadores cada 3 segundos - CORREGIDO
   useEffect(() => {
     const interval = setInterval(() => {
-      const gameRoomId = sessionStorage.getItem("gameRoomId")
-      if (gameRoomId) {
-        fetchPlayers(gameRoomId)
+      const joinCode = sessionStorage.getItem("joinCode") // ✅ Usar joinCode
+      if (joinCode) {
+        console.log("Polling players con joinCode:", joinCode)
+        fetchPlayers(joinCode)
       }
     }, 3000)
 
@@ -113,8 +126,8 @@ export default function WaitingRoom() {
   const handleStartGame = () => {
     if (!canStart || !isAdmin) return
 
-    const gameRoomId = sessionStorage.getItem("gameRoomId")
-    socket.emit("startGame", { room: gameRoomId })
+    const joinCode = sessionStorage.getItem("joinCode") // ✅ Usar joinCode
+    socket.emit("startGame", { room: joinCode })
     router.push("/tablero")
   }
 
@@ -128,6 +141,7 @@ export default function WaitingRoom() {
       })
       
       sessionStorage.removeItem("gameRoomId")
+      sessionStorage.removeItem("joinCode")
       router.push("/lobby")
     } catch (error) {
       console.error("Error al salir de la sala:", error)

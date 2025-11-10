@@ -27,13 +27,13 @@ export default function Lobby() {
           return
         }
 
-        const res = await fetch(`http://localhost:4000/user/${userId}`) //trae toda la info del usuario
+        const res = await fetch(`http://localhost:4000/user/${userId}`)
         
         if (res.ok) {
           const data = await res.json()
-          setUser(data) // guarda la info del usuario en el estado
+          setUser(data)
           sessionStorage.setItem("userId", userId)
-          console.log(user)
+          console.log(data) // Corregido: usar 'data' en lugar de 'user'
         } else {
           router.push("/login")
         }
@@ -48,7 +48,6 @@ export default function Lobby() {
     fetchUser()
   }, [searchParams, router])
 
-
   //useEffect para eliminar al usuario de cualquier room anterior
   useEffect(() => {
     const userId = sessionStorage.getItem("userId")
@@ -62,35 +61,34 @@ export default function Lobby() {
   }, [])
 
   //handleJoinRoom
- const handleJoinRoom = async () => {
-  const userId = sessionStorage.getItem("userId");
-  console.log(userId)
+  const handleJoinRoom = async () => {
+    const userId = sessionStorage.getItem("userId")
+    console.log(userId)
 
-  try {
-    const res = await fetch("http://localhost:4000/joinroom", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ joinCode, playerId: userId }),
-    });
+    try {
+      const res = await fetch("http://localhost:4000/joinroom", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ joinCode, playerId: userId }),
+      })
 
-    const data = await res.json();
-    console.log(data)
+      const data = await res.json()
+      console.log(data)
 
-    if (!res.ok) {
-      setError(data.error || "Error al unirse a la sala");
-      return;
+      if (!res.ok) {
+        setError(data.error || "Error al unirse a la sala")
+        return
+      }
+
+      sessionStorage.setItem("joinCode", joinCode)
+      router.push(`/waitingroom?joinCode=${joinCode}`)
+
+    } catch (error) {
+      setError("No se pudo conectar con el servidor")
     }
-
-    sessionStorage.setItem("joinCode", joinCode)
-    router.push(`/waitingroom?joinCode=${joinCode}`);
-
-  } catch (error) {
-    setError("No se pudo conectar con el servidor");
   }
-};
 
-
-  // handleCreateRoom
+  // handleCreateRoom - CORREGIDO
   const handleCreateRoom = async () => {
     setError("")
     setSuccess("")
@@ -102,8 +100,9 @@ export default function Lobby() {
 
     try {
       const userId = sessionStorage.getItem("userId")
-      console.log(userId)
-      const res = await fetch("http://localhost:4000/createroom", {
+      console.log("userId:", userId)
+      
+      const res = await fetch("http://localhost:4000/createCode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -114,26 +113,27 @@ export default function Lobby() {
       })
 
       const data = await res.json()
+      console.log("Respuesta del servidor:", data)
 
       if (!res.ok) {
         setError(data.error || "Error al crear la sala")
         return
       }
 
-      const { roomId } = data;
-      localStorage.setItem("gameRoomId", roomId);
-      router.push(`/tablero`);
-    } catch (error) {
-      console.error("Error de red:", error);
-      alert("No se pudo conectar con el servidor.");
-    }
-    
-    try {  
+      // Verificar qué joinCode usar
+      const joinCodeToUse = data.joinCode || data.code || data.roomId
+      console.log("joinCode a usar:", joinCodeToUse)
+      
+      // Guardar AMBOS en sessionStorage
       sessionStorage.setItem("gameRoomId", data.roomId)
+      sessionStorage.setItem("joinCode", joinCodeToUse)
+      
       setSuccess(`¡Sala creada con éxito!`)
       
+      // Redirigir después de un breve delay
       setTimeout(() => {
-        router.push(`/waitingroom`)
+        console.log("Redirigiendo a waitingroom...")
+        router.push(`/waitingroom?joinCode=${joinCodeToUse}`)
       }, 1000)
 
     } catch (error) {
@@ -202,6 +202,4 @@ export default function Lobby() {
       </div>
     </div>
   )
-
 }
-
