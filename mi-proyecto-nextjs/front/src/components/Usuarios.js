@@ -40,7 +40,7 @@ export default function Usuarios (props) {
     useEffect(() => {
       obtenerUsuarios();
       obtenerFotos();
-    }, []); // El arreglo vacío asegura que solo se ejecute una vez
+    }, []);
 
     return (
         <>
