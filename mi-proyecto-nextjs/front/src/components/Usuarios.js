@@ -43,6 +43,9 @@ export default function Usuarios (props) {
       obtenerUsuarios();
       obtenerFotos();
     }, []);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
     return (
