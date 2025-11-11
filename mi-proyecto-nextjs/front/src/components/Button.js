@@ -11,7 +11,6 @@ export default function Button({ text, onClick, page, type = "button", className
       className={clsx(
         styles.btn,
         page === "register" ? styles.btnRegister : styles.btnLogin,
-        className
       )}
       onClick={onClick}
     >

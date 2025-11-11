@@ -3,23 +3,24 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #2f0000;
   padding: 20px;
 }
 
 .waitingCard {
-  background: rgba(255, 255, 255, 0.95);
+  background: #000;
   border-radius: 20px;
   padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
   max-width: 800px;
   width: 100%;
+  border: 2px solid rgb(152, 0, 0);
 }
 
 .title {
   text-align: center;
   font-size: 32px;
-  color: #333;
+  color: #fcfcfc;
   margin-bottom: 30px;
   font-weight: bold;
 }
@@ -31,12 +32,13 @@
 
 .codeLabel {
   font-size: 16px;
-  color: #666;
+  color: #fcfcfc;
   margin-bottom: 10px;
 }
 
 .codeBox {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /*background: linear-gradient(135deg, #ae0000 0%, #000000 100%);*/
+  background-color: #ae0000;
   padding: 20px;
   border-radius: 10px;
   cursor: pointer;
@@ -52,7 +54,7 @@
   font-weight: bold;
   color: white;
   letter-spacing: 10px;
-  font-family: 'Courier New', monospace;
+  /*font-family: 'Courier New', monospace;*/
   display: block;
 }
 
@@ -70,7 +72,7 @@
 .playersSection h2 {
   text-align: center;
   font-size: 24px;
-  color: #333;
+  color: #fcfcfc;
   margin-bottom: 20px;
 }
 
@@ -81,7 +83,7 @@
 }
 
 .playerSlot {
-  background: white;
+  background: #ae0000;
   border: 3px solid #e0e0e0;
   border-radius: 15px;
   padding: 20px;
@@ -90,13 +92,15 @@
 }
 
 .playerSlot.filled {
-  border-color: #667eea;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-color:rgb(94, 0, 0);
+  /*background: linear-gradient(135deg, #800202 0%, #550000 100%);*/
+  background-color: #ae0000;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
 }
 
 .playerSlot.empty {
   border-style: dashed;
-  opacity: 0.6;
+  opacity: 40%;
 }
 
 .playerAvatar {
@@ -105,7 +109,7 @@
   margin: 0 auto 10px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid #667eea;
+  border: 3px solid #ae0000;
 }
 
 .playerAvatar img {
@@ -119,11 +123,11 @@
   height: 80px;
   margin: 0 auto 10px;
   border-radius: 50%;
-  background: #f0f0f0;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 3px dashed #ccc;
+  border: 3px dashed #ffffff;
 }
 
 .questionMark {
@@ -134,14 +138,14 @@
 .playerName {
   font-size: 16px;
   font-weight: bold;
-  color: #333;
+  color: #fcfcfc;
   margin: 5px 0;
   word-break: break-word;
 }
 
 .waitingText {
   font-size: 14px;
-  color: #999;
+  color: #fcfcfc;
   font-style: italic;
 }
 
@@ -165,13 +169,14 @@
 
 .waitingMessage {
   text-align: center;
-  color: #666;
+  color: #1a1a1a;
   font-size: 16px;
   padding: 15px;
   background: #f0f0f0;
   border-radius: 10px;
   width: 100%;
 }
+
 
 @media (max-width: 768px) {
   .waitingCard {
