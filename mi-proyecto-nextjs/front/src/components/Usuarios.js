@@ -33,20 +33,14 @@ export default function Usuarios (props) {
     };
 
     // Este useEffect se ejecutará solo una vez cuando el componente se monte
-<<<<<<< Updated upstream
   /*useEffect(() => {
     obtenerUsuarios();
     obtenerFotos();
   }, []);*/ // El arreglo vacío asegura que solo se ejecute una vez
-=======
     useEffect(() => {
       obtenerUsuarios();
       obtenerFotos();
-    }, []);
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+    }, []); // El arreglo vacío asegura que solo se ejecute una vez
 
     return (
         <>
