@@ -53,8 +53,8 @@ export default function RegisterPage() {
       email,
       password, // En el backend deberías encriptar la contraseña
       photo: foto,
-      wins: 0, // Inicialmente 0 victorias
-      admin: 0, // Por defecto, no es admin
+      wins: 0,
+      admin: 0
     }
 
     try {
