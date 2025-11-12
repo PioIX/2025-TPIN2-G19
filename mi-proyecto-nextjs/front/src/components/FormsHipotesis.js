@@ -1,20 +1,19 @@
 "use client"
 
-import React from "react"
+import React, { use } from "react"
 import clsx from "clsx"
 import styles from "./FormsAcusacion.module.css"
 import Button from "@/components/Button"
 import { useState , useEffect } from "react"
 
 
-export default function FormsAcusacion({ }) {
+export default function FormsHipotesis({props}) {
   const [isOpen, setIsOpen] = useState(false);
   const [seleccionSospechosos, setSeleccionSospechosos] = useState("");
   const [seleccionArmas, setSeleccionArmas] = useState("");
-  const [seleccionHabitaciones, setSeleccionHabitaciones] = useState("");
+  const [habitacion, setHabitacion] = useState("");
   const categorieSospechosos = ["Señorita Escarlata", "Señora Azulino", "Profesor Moradillo", "Señor Verdi", "Señora Blanco"]
   const categorieArmas = ["Cuchillo", "Revólver", "Soga", "Llave inglesa", "Veneno"]
-  const categorieHabitaciones = ["Habitación", "Comedor", "Cocina", "Baño"]
 
   const handleSelectSospechosos = (e) => {
     setSeleccionSospechosos(e.target.value);
@@ -22,10 +21,6 @@ export default function FormsAcusacion({ }) {
 
   const handleSelectArmas = (e) => {
     setSeleccionArmas(e.target.value);
-  };
-
-  const handleSelectHabitaciones = (e) => {
-    setSeleccionHabitaciones(e.target.value);
   };
 
   const manejarEnvio = (evento) => {
@@ -37,7 +32,6 @@ export default function FormsAcusacion({ }) {
     })
     setSeleccionSospechosos("");
     setSeleccionArmas("");
-    setSeleccionHabitaciones("");
   };
 
   if (!isOpen) return null;
@@ -68,14 +62,12 @@ export default function FormsAcusacion({ }) {
 
       <h2>Habitaciones</h2>
       <div className="divHabitacionesContainer">
-        <select className={styles.selectHabitaciones} onChange={handleSelectHabitaciones}>
+        <select className={styles.selectHabitaciones}>
           <option>¿Dónde?</option>
-          {categorieHabitaciones.map((categorie, index) => {
-            return (<option key={`habitacion-${index}`} value={`${categorie}`}>{categorie}</option>)
-          })}
+          <option key={`habitacion`} value={props.habitacion}>{props.habitacion}</option>
         </select>
       </div>
-      <button type="submit">Acusar</button>
+      <button type="submit">Preguntar</button>
       
     </form>
   )

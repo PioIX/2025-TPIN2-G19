@@ -3,58 +3,38 @@
 import React, { useState, useEffect } from "react";
 import styles from '@/components/usuarios.module.css'
 
-export default function Usuarios (props) {
-
-    const [users, setUsers] = useState([]);
-    const [photos, setPhotos] = useState([]);
-    const joinCode=sessionStorage.getItem("joinCode")
-
-    /*async function obtenerUsuarios() {
+export default function Usuarios() {
+  const [usuarios, setUsuarios] = useState([]);
+  
+  useEffect(() => {
+    const joinCode = sessionStorage.getItem("joinCode");
+    const obtenerUsuarios = async () => {
       try {
-        fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
-          .then(response => response.json())
-          .then((console.log(response)))
-          setUsers(response)
-          console.log(users)
+        const response = await fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`);
+        const data = await response.json();
+        setUsuarios(data);
+        console.log("Usuarios obtenidos:", data);
       } catch (err) {
-        console.error("Error al obtener usuarios:", err)
-      }
-    };*/
-
-    async function obtenerFotos() {
-      try {
-        const res = await fetch(`http://localhost:4000/photoUsersInRoom?joinCode=${joinCode}`)
-        if (!res.ok) throw new Error("Error al obtener fotos")
-        const data = await res.json()
-        setPhotos(data)
-      } catch (err) {
-        console.error("Error al conectar con el servidor:", err)
+        console.error("Error al obtener usuarios:", err);
       }
     };
 
-    // Este useEffect se ejecutará solo una vez cuando el componente se monte
-  /*useEffect(() => {
-    obtenerUsuarios();
-    obtenerFotos();
-  }, []);*/ // El arreglo vacío asegura que solo se ejecute una vez
-    useEffect(() => {
+    if (joinCode) {
       obtenerUsuarios();
-      obtenerFotos();
-    }, []);
+    }
+  }, []);
 
-    return (
-        <>
-            <div className={styles.divUsuariosPrincipal}>
-                <h2>Usuarios</h2>
-                <div>
-                    {users.map((user, index) => (
-                        <div key={index} className={styles.divUsuarios}>
-                            <img src={photos[index]} alt={`Foto de ${user}`} />
-                            <p>{user}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </>
-    )
+  return (
+    <div className={styles.divUsuariosPrincipal}>
+      <h2>Usuarios ({usuarios.length})</h2>
+      <div>
+        {usuarios.map((usuario) => (
+          <div key={usuario.userId} className={styles.divUsuarios}>
+            <img src={usuario.photo} alt={`Foto de ${usuario.username}`} />
+            <p>{usuario.username}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
