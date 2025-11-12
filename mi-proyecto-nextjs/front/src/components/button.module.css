@@ -13,7 +13,7 @@
 .btnLogin,
 .btnRegister,
 .btnHome {
-  background-color: #c40000;
+  background-color: #ae0000;;
   color: #fff;
   box-shadow: 0 0 15px rgba(255, 38, 0, 0.3);
 }
@@ -21,7 +21,7 @@
 .btnLogin:hover,
 .btnRegister:hover,
 .btnHome:hover {
-  background-color: #ff0000;
+  background-color: #ae0000;;
   transform: scale(1.05);
-  box-shadow: 0 0 25px rgb(255, 8, 0);
+  box-shadow: 0 0 25px #ae0000(255, 8, 0);
 }

@@ -25,13 +25,7 @@ export default function Tablero() {
     const joinCode = sessionStorage.getItem("joinCode")
     const userId = sessionStorage.getItem("userId")
     const [numeroObtenido, setNumeroObtenido] = useState(0)    
-    /*useEffect(()=> {
-        fetch('http://localhost:4000/usersInRoom')
-        .then(response => response.json)
-        .then(data => setUsersInRoom(data))
-        .then(console.log("usersInRoom: ", usersInRoom))
-    }, [usersInRoom])*/
-
+    
     useEffect(() => {
         if (!socket || !isConnected) return
 
@@ -119,6 +113,10 @@ export default function Tablero() {
         })
     }
 
+    useEffect (() => {
+        obtenerUsuarios()
+    })
+
     function getRandomIntInclusive(min, max) {
         min = Math.ceil(min)
         max = Math.floor(max)
@@ -136,15 +134,17 @@ export default function Tablero() {
             return;
         }
     }
+
     const cartasDisponiblesCharacters = cardsCharacters.slice();
     const cartasDisponiblesWeapons = cardsWeapons.slice();
     const cartasDisponiblesRooms = cardsRooms.slice();
+    
 
     async function obtenerUsuarios() {
-        fetch("http://localhost:4000/users")
+        fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
             .then(response => response.json())
             .then(result => {
-                setUsers(result)
+                setUsersInRoom(result)
             }
         )
 
@@ -172,13 +172,6 @@ export default function Tablero() {
         return asignaciones;
     }
 
-    async function obtenerUsuariosEnElRoom(params) {
-        fetch(`http://localhost:4000/usersInRoom`)
-        .then(response => response.json())
-        .then(result => {
-            setUsersInRoom(result)
-        })
-    }
 
     async function obtenerNumeroAleatorio() {
         usersInRoom.map((user, index), numero => Math.floor(Math.random()))
@@ -243,7 +236,7 @@ export default function Tablero() {
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
                 <FormsAcusacion onClick={volver} onSubmit={handleAcusacion}></FormsAcusacion>
-                {/*<Usuarios users={users}></Usuarios>*/}
+                {/*<Usuarios usersInRoom={usersInRoom}></Usuarios>*/}
             </div>
         </>
     )

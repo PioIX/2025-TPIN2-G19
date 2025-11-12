@@ -167,6 +167,22 @@ app.get('/usersInRoom', async function(req,res){
     }
 })
 
+app.get('/photoUsersInRoom', async function(req,res){
+  const { joinCode } = req.query;
+    try {
+        console.log("Entre1")
+        const response = await realizarQuery(`
+            SELECT Users.photo
+            FROM Users
+            INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId WHERE UsersXRooms.gameRoomId = ${joinCode}    
+        `)
+        res.send(response)
+        
+    } catch (error) {
+        console.log(error)
+    }
+})
+
 // Endpoint para obtener usuario por ID
 app.get('/user/:id', async (req, res) => {
   try {
@@ -348,34 +364,6 @@ app.get('/users', async function(req,res){
     }
 })
 
-app.get('/usersInRoom', async function(req,res){
-    try {
-        console.log("USERS IN ROOM")
-        const response = await realizarQuery(`
-            SELECT DISTINCT Users.username
-            FROM Users
-            INNER JOIN UsersXRooms ON UsersXRooms.userId = Users.userId
-            WHERE UsersXRooms.gameRoomId = ${req.body.roomId};
-        `)
-        console.log("RESPONSE: ", response)
-        res.send(response)
-    } catch (error) {
-        console.log(error)
-    }
-})
-
-app.get('/photoUsersInRoom', async function(req,res){
-    try {
-        console.log("Entre1")
-        const response = await realizarQuery(`
-            SELECT Users.photo FROM Users INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId WHERE UsersXRooms.gameRoomId = ${req.query.gameRoomId}    
-        `)
-        res.send(response)
-        
-    } catch (error) {
-        console.log(error)
-    }
-})
 
 app.delete('/deleteUsersInRoom', async function (req,res) {
   try {

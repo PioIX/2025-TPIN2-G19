@@ -36,7 +36,7 @@ export default function WaitingRoom() {
 
       socket.on("gameStarted", () => {
         console.log("¡El juego ha comenzado!")
-        router.push(`/tablero`)
+        router.push(`/tablero?joinCode=${joinCode}`)
       })
     }
 
@@ -193,7 +193,7 @@ export default function WaitingRoom() {
                   <>
                     <div className={styles.playerAvatar}>
                       <img 
-                        src={player.photo || "/default-avatar.png"} 
+                        src={`/imagenes/${player.photo || "default.jpg"}`} // si photo es vacío usa default.jpg
                         alt={player.username}
                       />
                     </div>
