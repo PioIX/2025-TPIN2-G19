@@ -7,7 +7,8 @@ import Button from "@/components/Button"
 import { useState , useEffect } from "react"
 
 
-export default function FormsAcusacion({ porps }) {
+export default function FormsAcusacion({ }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [seleccionSospechosos, setSeleccionSospechosos] = useState("");
   const [seleccionArmas, setSeleccionArmas] = useState("");
   const [seleccionHabitaciones, setSeleccionHabitaciones] = useState("");
@@ -36,6 +37,23 @@ export default function FormsAcusacion({ porps }) {
 
   }
 
+  if (!seleccionSospechosos || !seleccionArmas || !seleccionHabitaciones) {
+        alert("Debes seleccionar un sospechoso, un arma y una habitación");
+        return;
+  }
+
+  onSubmit({
+    sospechoso: seleccionSospechosos,
+    arma: seleccionArmas,
+    habitacion: seleccionHabitaciones
+  });
+
+  setSeleccionSospechosos("");
+  setSeleccionArmas("");
+  setSeleccionHabitaciones("");
+
+  if (!isOpen) return null;
+  
   return (
     <form onSubmit={manejarEnvio}>
       <h1>Acusar</h1>
@@ -70,7 +88,7 @@ export default function FormsAcusacion({ porps }) {
         </select>
       </div>
       <button type="submit">Acusar</button>
-      <Button /*onClick={onClick}*/>Volver</Button>
+      
     </form>
   )
 }

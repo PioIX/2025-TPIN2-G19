@@ -13,7 +13,6 @@ import { cardsCharacters, cardsWeapons, cardsRooms } from "@/classes/Card";
 import FormsAcusacion from "@/components/FormsAcusacion";
 import { useSocket } from "@/hooks/useSocket";
 
-
 export default function Tablero() {
     const [usersInRoom, setUsersInRoom] = useState([])
     const [jugadores, setJugadores] = useState([])
@@ -24,6 +23,7 @@ export default function Tablero() {
     const router = useRouter()
     const { socket, isConnected } = useSocket()
     const [numeroObtenido, setNumeroObtenido] = useState(0)    
+    const [modalAcusacionAbierto, setModalAcusacionAbierto] = useState(false)
     
     useEffect(() => {
         if (!socket || !isConnected) return
@@ -110,9 +110,9 @@ export default function Tablero() {
         })
     }
 
-    useEffect (() => {
+    useEffect(() => {
         obtenerUsuarios()
-    })
+    }, [])
 
     function getRandomIntInclusive(min, max) {
         min = Math.ceil(min)
@@ -169,18 +169,19 @@ export default function Tablero() {
         return asignaciones;
     }
 
+    const abrirModalAcusacion = () => {
+        setModalAcusacionAbierto(true)
+    }
 
-    async function obtenerNumeroAleatorio() {
-        usersInRoom.map((user, index), numero => Math.floor(Math.random()))
+    const cerrarModalAcusacion = () => {
+        setModalAcusacionAbierto(false)
     }
 
     async function handleAcusacion(valores) {
         console.log("Valores seleccionados:", valores);
     }
 
-    async function volver() {
-        console.log("jhsdsjdh");
-    }
+    
     
     const categorieSospechosos = ["Coronel Mostaza", "pepip", "asdasd"];
     const categoriesArmas = ["Coronel Mostaza", "pepip", "asdasd"];
@@ -199,7 +200,12 @@ export default function Tablero() {
                 />
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
-                <FormsAcusacion onClick={volver} onSubmit={handleAcusacion}></FormsAcusacion>
+                <button onClick={abrirModalAcusacion}>Hacer Acusación</button>
+                <FormsAcusacion 
+                    isOpen={modalAcusacionAbierto}
+                    onClose={cerrarModalAcusacion}
+                    onSubmit={handleAcusacion}
+                />
                 <Usuarios></Usuarios>
             </div>
         </>

@@ -22,7 +22,7 @@ export default function Usuarios() {
     if (joinCode) {
       obtenerUsuarios();
     }
-  }, [joinCode]);
+  }, []);
 
   return (
     <div className={styles.divUsuariosPrincipal}>
