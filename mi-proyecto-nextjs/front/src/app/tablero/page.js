@@ -44,13 +44,6 @@ export default function Tablero() {
         setJugadores((prev) => [...prev, userid]);
         console.log("jugadores en el tablero: ", jugadores)
 
-        // Unirse a la sala
-        socket.emit("joinRoom", { 
-        room: joincode, 
-        playerId: userid, 
-        joinCode: joincode 
-        })
-
         // Inicializar el juego
         socket.emit("initializeGame", { joincode })
 

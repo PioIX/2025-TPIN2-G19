@@ -14,6 +14,7 @@ export default function Usuarios() {
         const data = await response.json();
         setUsuarios(data);
         console.log("Usuarios obtenidos:", data);
+        console.log("Join code:", joinCode);
       } catch (err) {
         console.error("Error al obtener usuarios:", err);
       }

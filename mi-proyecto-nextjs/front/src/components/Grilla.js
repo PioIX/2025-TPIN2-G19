@@ -181,20 +181,20 @@ export default function Grilla({ currentUserId, players, currentTurn, numeroObte
 
         {/* Modal de decisión de entrada */}
         {mostrarDecisionEntrada && (
-            <div style={styles.modalOverlay}>
-                <div style={styles.modalContent}>
+            <div className={styles.modalOverlay}>
+                <div className={styles.modalContent}>
                     <h3>Has llegado a la entrada de {habitacionActual}</h3>
                     <p>¿Deseas entrar a la habitación?</p>
-                    <div style={styles.modalButtons}>
+                    <div className={styles.modalButtons}>
                         <button
                             onClick={() => decidirEntrarHabitacion(true)}
-                            style={{ ...styles.btn, ...styles.btnEntrar }}
+                            className={{ ...styles.btn, ...styles.btnEntrar }}
                         >
                             Entrar
                         </button>
                         <button
                             onClick={() => decidirEntrarHabitacion(false)}
-                            style={{ ...styles.btn, ...styles.btnEsperar }}
+                            className={{ ...styles.btn, ...styles.btnEsperar }}
                         >
                             Esperar al próximo turno
                         </button>
@@ -204,9 +204,9 @@ export default function Grilla({ currentUserId, players, currentTurn, numeroObte
         )}
 
         {/* Modal de Hipótesis */}
-        {mostrarHipotesis && Hipotesis && (
-            <div style={styles.modalOverlay}>
-                <div style={styles.modalContentHipotesis}>
+        {mostrarHipotesis && ( //saque Hipotesis porque no esta definido
+            <div className={styles.modalOverlay}>
+                <div className={styles.modalContentHipotesis}>
                     <FormsHipotesis
                         habitacion={habitacionActual}
                         onCerrar={cerrarHipotesis}
