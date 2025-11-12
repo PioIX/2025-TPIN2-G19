@@ -91,7 +91,6 @@ export default function WaitingRoom() {
       if (roomData && data.length == roomData.players) {
         setCanStart(true)
         console.log("Todos los jugadores se han unido. El juego puede comenzar.")
-        router.push("/tablero")
       }
     } catch (error) {
       console.error("Error al obtener jugadores:", error)
@@ -179,7 +178,7 @@ export default function WaitingRoom() {
                   <>
                     <div className={styles.playerAvatar}>
                       <img 
-                        src={player.photo || "/default-avatar.png"} 
+                        src={`/imagenes/${player.photo || "default.jpg"}`} // si photo es vacío usa default.jpg
                         alt={player.username}
                       />
                     </div>
