@@ -3,6 +3,7 @@
 import React from "react"
 import styles from "./Grilla.module.css"  // Importa los estilos de CSS Modules
 import { useState , useEffect } from "react"
+import FormsHipotesis from "@/components/FormsHipotesis"
 
 /*export default function Grilla (props) {
     const cuadrados = Array(144).fill(null); 
@@ -21,23 +22,26 @@ import { useState , useEffect } from "react"
 export default function Grilla ({currentUserId, players, currentTurn, numeroObtenido, onMoverJugador }){
     const tablero = [
         
-        [1,3,3, 3, 3, 3, 4, 2, 4, 3, 3, 3, 3, 3, 3,3],
-        [3,3,3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3,3],
-        [3,3,3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3,3],
-        [3,3,3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3,3],
-        [4,4,4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3,3],
-        [2,4,4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,4],
-        [4,4,4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,2],
-        [3,3,5, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3,3],
-        [3,3,3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3,3],
-        [3,3,3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 3, 3, 3,3],
-        [3,3,3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 3, 3, 3,3],
-        [3,3,3, 3, 3, 3, 3, 3, 4, 2, 3, 3, 3, 3, 3,1]
+        [1,3,3,3,3,3,4,2,4,3,3,3,3,3,3,3],
+        [3,3,3,3,3,3,4,4,4,3,3,3,3,3,3,3],
+        [3,3,3,3,3,3,4,4,4,5,3,3,3,3,3,3],
+        [3,5,3,3,3,3,4,4,4,3,3,3,3,3,3,3],
+        [4,4,4,4,4,4,4,4,4,4,4,3,5,3,3,3],
+        [2,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],
+        [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,2],
+        [3,3,3,3,3,3,4,4,4,4,3,3,3,3,3,3],
+        [3,3,3,3,3,5,4,4,4,4,3,3,3,3,3,3],
+        [3,3,3,3,3,3,3,3,4,4,5,3,3,3,3,3],
+        [3,3,3,3,3,3,3,3,4,4,3,3,3,3,3,3],
+        [3,3,3,3,3,3,3,3,4,2,3,3,3,3,3,1]
         
     ];
 
     const [possibleMoves, setPossibleMoves] = useState([]);
-    const [selectedMove, setSelectedMove] = useState(null);  
+    const [selectedMove, setSelectedMove] = useState(null);
+    const [mostrarDecisionEntrada, setMostrarDecisionEntrada] = useState(false);
+    const [mostrarHipotesis, setMostrarHipotesis] = useState(false);
+    const [habitacionActual, setHabitacionActual] = useState(null);  
 
     const miTurno = () => {
     const currentPlayer = players.find(p => p.turnOrder === currentTurn);
@@ -85,10 +89,26 @@ export default function Grilla ({currentUserId, players, currentTurn, numeroObte
         return movimientos;
     };
 
+    const tipoHabitacion = (x, y) => {
+        if (x === 2 && y === 9) return "Comedor";
+        if (x === 3 && y === 1) return "Baño";
+        if (x === 4 && y === 12) return "Comedor";
+        if (x === 8 && y === 5) return "Cocina";
+        if (x === 9 && y === 10) return "Habitacion";
+    };
+
     const moverJugador = (nuevaPosicion) => {
         onMoverJugador(nuevaPosicion);
         setSelectedMove(null);
         setPossibleMoves([]);
+    };
+
+    const tipoCasilla = tablero[nuevaPosicion.x][nuevaPosicion.y];
+        if (tipoCasilla === 5) {
+            const habitacion = tipoHabitacion(nuevaPosicion.x, nuevaPosicion.y);
+            setHabitacionActual(habitacion);
+            setMostrarDecisionEntrada(true);
+        }
     };
 
     const seleccionarCasilla = (x, y) => {
@@ -103,6 +123,19 @@ export default function Grilla ({currentUserId, players, currentTurn, numeroObte
         setSelectedMove(null);
         setPossibleMoves([]);
     };
+
+    const decidirEntrarHabitacion = (entrar) => {
+        setMostrarDecisionEntrada(false);
+        if (entrar) {
+            setMostrarHipotesis(true);
+        }
+    };
+
+    const cerrarHipotesis = () => {
+        setMostrarHipotesis(false);
+        setHabitacionActual(null);
+    };
+
 
     useEffect(() => {
     if (numeroObtenido > 0 && miTurno()) {
@@ -144,9 +177,44 @@ export default function Grilla ({currentUserId, players, currentTurn, numeroObte
         {selectedMove && miTurno() && (
             <button onClick={confirmarMovimiento}>Confirmar movimiento</button>
         )}
+
+        {/* Modal de decisión de entrada */}
+            {mostrarDecisionEntrada && (
+                <div style={styles.modalOverlay}>
+                    <div style={styles.modalContent}>
+                        <h3>Has llegado a la entrada de {habitacionActual}</h3>
+                        <p>¿Deseas entrar a la habitación?</p>
+                        <div style={styles.modalButtons}>
+                            <button 
+                                onClick={() => decidirEntrarHabitacion(true)}
+                                style={{...styles.btn, ...styles.btnEntrar}}
+                            >
+                                Entrar
+                            </button>
+                            <button 
+                                onClick={() => decidirEntrarHabitacion(false)}
+                                style={{...styles.btn, ...styles.btnEsperar}}
+                            >
+                                Esperar al próximo turno
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Hipótesis */}
+            {mostrarHipotesis && Hipotesis && (
+                <div style={styles.modalOverlay}>
+                    <div style={styles.modalContentHipotesis}>
+                        <FormsHipotesis 
+                            habitacion={habitacionActual}
+                            onCerrar={cerrarHipotesis}
+                        />
+                    </div>
+                </div>
+            )}
   
     </>
 
-    );
-}
+);
 
