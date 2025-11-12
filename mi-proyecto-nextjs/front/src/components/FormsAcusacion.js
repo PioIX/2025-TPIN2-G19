@@ -43,7 +43,7 @@ export default function FormsAcusacion({ porps }) {
       <h2>Sospechosos</h2>
       <div className="divSospechososContainer">
         <select className={styles.selectSospechosos} onChange={handleSelectSospechosos}>
-          <option selected>¿Quién?</option>
+          <option>¿Quién?</option>
           {categorieSospechosos.map((categorie, index) => {
             return (<option key={`sospechoso-${index}`} value={`${categorie}`}>{categorie}</option>)
           })}
@@ -53,7 +53,7 @@ export default function FormsAcusacion({ porps }) {
       <h2>Armas</h2>
       <div className="divArmasContainer">
         <select className={styles.selectArmas} onChange={handleSelectArmas}>
-          <option selected>¿Con qué arma?</option>
+          <option>¿Con qué arma?</option>
           {categorieArmas.map((categorie, index) => {
             return (<option key={`arma-${index}`} value={`${categorie}`}>{categorie}</option>)
           })}
@@ -63,7 +63,7 @@ export default function FormsAcusacion({ porps }) {
       <h2>Habitaciones</h2>
       <div className="divHabitacionesContainer">
         <select className={styles.selectHabitaciones} onChange={handleSelectHabitaciones}>
-          <option selected>¿Dónde?</option>
+          <option>¿Dónde?</option>
           {categorieHabitaciones.map((categorie, index) => {
             return (<option key={`habitacion-${index}`} value={`${categorie}`}>{categorie}</option>)
           })}
