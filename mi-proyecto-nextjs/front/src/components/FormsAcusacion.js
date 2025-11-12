@@ -28,32 +28,20 @@ export default function FormsAcusacion({ }) {
     setSeleccionHabitaciones(e.target.value);
   };
 
-  const handleAcusar = (evento) => {
+  const manejarEnvio = (evento) => {
     evento.preventDefault();
-    onSubmit({ seleccion1, seleccion2, seleccion3 });
+    onSubmit({
+      sospechoso: seleccionSospechosos,
+      arma: seleccionArmas,
+      habitacion: seleccionHabitaciones
+    })
+    setSeleccionSospechosos("");
+    setSeleccionArmas("");
+    setSeleccionHabitaciones("");
   };
 
-  async function manejarEnvio(event) {
-
-  }
-
-  if (!seleccionSospechosos || !seleccionArmas || !seleccionHabitaciones) {
-        alert("Debes seleccionar un sospechoso, un arma y una habitación");
-        return;
-  }
-
-  onSubmit({
-    sospechoso: seleccionSospechosos,
-    arma: seleccionArmas,
-    habitacion: seleccionHabitaciones
-  });
-
-  setSeleccionSospechosos("");
-  setSeleccionArmas("");
-  setSeleccionHabitaciones("");
-
   if (!isOpen) return null;
-  
+    
   return (
     <form onSubmit={manejarEnvio}>
       <h1>Acusar</h1>

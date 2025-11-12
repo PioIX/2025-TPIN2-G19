@@ -23,7 +23,7 @@ export default function Tablero() {
     const router = useRouter()
     const { socket, isConnected } = useSocket()
     const [numeroObtenido, setNumeroObtenido] = useState(0)    
-    const [modalAcusacionAbierto, setModalAcusacionAbierto] = useState(false)
+    const [modalAcusacion, setModalAcusacionAbierto] = useState(false)
     
     useEffect(() => {
         if (!socket || !isConnected) return
@@ -42,6 +42,7 @@ export default function Tablero() {
         console.log("Conectado al tablero")
 
         setJugadores((prev) => [...prev, userid]);
+        console.log("jugadores en el tablero: ", jugadores)
 
         // Unirse a la sala
         socket.emit("joinRoom", { 
@@ -171,16 +172,16 @@ export default function Tablero() {
 
     const abrirModalAcusacion = () => {
         setModalAcusacionAbierto(true)
+        return modalAcusacion
+        /*console.log("abrir modal")
+        if (modalAcusacion==true){
+            console.log("dhjdsjsj")
+        }*/
     }
 
     const cerrarModalAcusacion = () => {
         setModalAcusacionAbierto(false)
     }
-
-    async function handleAcusacion(valores) {
-        console.log("Valores seleccionados:", valores);
-    }
-
     
     
     const categorieSospechosos = ["Coronel Mostaza", "pepip", "asdasd"];
@@ -201,11 +202,7 @@ export default function Tablero() {
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
                 <button onClick={abrirModalAcusacion}>Hacer Acusación</button>
-                <FormsAcusacion 
-                    isOpen={modalAcusacionAbierto}
-                    onClose={cerrarModalAcusacion}
-                    onSubmit={handleAcusacion}
-                />
+                <FormsAcusacion/>
                 <Usuarios></Usuarios>
             </div>
         </>
