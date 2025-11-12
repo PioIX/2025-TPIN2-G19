@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 const tipo = "checkbox"
 import Button from "@/components/Button"
@@ -19,35 +19,39 @@ export default function Tablero() {
     const [jugadores, setJugadores] = useState([])
     const [turnoActual, setTurnoActual] = useState(0)
     const [miIndice, setMiIndice] = useState(null)
-    
+    const [userId, setUserId] = useState(0)
+    const [joinCode, setJoinCode] = useState(0)
     const router = useRouter()
     const { socket, isConnected } = useSocket()
-    const joinCode = sessionStorage.getItem("joinCode")
-    const userId = sessionStorage.getItem("userId")
     const [numeroObtenido, setNumeroObtenido] = useState(0)    
     
     useEffect(() => {
         if (!socket || !isConnected) return
+        const joincode = sessionStorage.getItem("joinCode")
+        const userid = sessionStorage.getItem("userId")
+        setUserId(userid)
+        setJoinCode(joincode)
+        console.log("joincode en tablero:", joincode)
+        console.log("userId en tablero:", userid)
 
-        const joinCode = sessionStorage.getItem("joinCode")
-        const userId = sessionStorage.getItem("userId")
-
-        if (!joinCode || !userId) {
-        router.push("/lobby")
-        return
+        if (!joincode || !userid) {
+            router.push("/lobby")
+            return
         }
 
         console.log("Conectado al tablero")
 
+        setJugadores((prev) => [...prev, userid]);
+
         // Unirse a la sala
         socket.emit("joinRoom", { 
-        room: joinCode, 
-        playerId: userId, 
-        joinCode: joinCode 
+        room: joincode, 
+        playerId: userid, 
+        joinCode: joincode 
         })
 
         // Inicializar el juego
-        socket.emit("initializeGame", { joinCode })
+        socket.emit("initializeGame", { joincode })
 
         // ===== LISTENERS DEL SOCKET =====
 
@@ -58,7 +62,7 @@ export default function Tablero() {
             setTurnoActual(data.currentTurn)
             
             // Encontrar mi índice
-            const miIdx = data.players.findIndex(p => p.userId == userId)
+            const miIdx = data.players.findIndex(p => p.userid == userid)
             setMiIndice(miIdx)
         })
 
@@ -73,7 +77,7 @@ export default function Tablero() {
             console.log("Jugador movido:", data)
             setJugadores(prev => 
                 prev.map(p => 
-                    p.userId === data.playerId 
+                    p.userid === data.playerId 
                         ? { ...p, position: data.newPosition }
                         : p
                 )
@@ -87,18 +91,11 @@ export default function Tablero() {
             setNumeroObtenido(0) // Resetear el dado
         })
 
-        // Si alguien se desconecta
-        socket.on("playerLeft", (data) => {
-            alert("Un jugador abandonó el juego")
-            router.push("/lobby")
-        })
-
         return () => {
             socket.off("gameInitialized")
             socket.off("diceRolled")
             socket.off("playerMoved")
             socket.off("turnChanged")
-            socket.off("playerLeft")
         }
     }, [socket, isConnected, router])
 
@@ -191,39 +188,6 @@ export default function Tablero() {
 
     return (
         <>
-            <h1>Anotador</h1>
-            <h2>Sospechosos</h2>
-            {categorieSospechosos.map((categorie, index) => {
-                return <>
-                    <div key={index}>
-                        <p>{categorie}</p>
-                        <input key={index} type={"checkbox"}></input>
-                    </div>
-
-                </>
-            })}
-
-            <h2>Armas</h2>
-            {categoriesArmas.map((categorie, index) => {
-                return <>
-                    <div key={index}>
-                        <p>{categorie}</p>
-                        <input type={"checkbox"}></input>
-                    </div>
-
-                </>
-            })}
-            <h2>Habitaciones</h2>
-            {categorieSHabitaciones.map((categorie, index) => {
-                return <>
-                    <div key={index}>
-                        <p>{categorie}</p>
-                        <input type={"checkbox"}></input>
-                    </div>
-
-                </>
-            })}
-
             <div className={styles["pagina-tablero"]}>
                 <Anotador></Anotador>
                 <Grilla 
@@ -236,7 +200,7 @@ export default function Tablero() {
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
                 <FormsAcusacion onClick={volver} onSubmit={handleAcusacion}></FormsAcusacion>
-                {/*<Usuarios usersInRoom={usersInRoom}></Usuarios>*/}
+                <Usuarios></Usuarios>
             </div>
         </>
     )

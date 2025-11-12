@@ -157,7 +157,7 @@ app.get('/usersInRoom', async function(req,res){
             FROM Users
             INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
             INNER JOIN GameRooms on GameRooms.gameRoomId= UsersXRooms.gameRoomId
-            WHERE GameRooms.joinCode = ${joinCode};  
+            WHERE GameRooms.joinCode = '${joinCode}';   
         `)
         console.log("Usuarios dentro de la sala: ", response)
         res.send(response)
