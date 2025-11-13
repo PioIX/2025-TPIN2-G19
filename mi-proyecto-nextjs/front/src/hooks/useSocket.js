@@ -190,7 +190,7 @@ const useSocket = (options = { withCredentials: true }, serverUrl = "http://loca
         // Funciones del Juego
         enviarSugerencia,
         hacerAcusacion,
-        initializeGame,
+        //initializeGame,
         cambiarTurno,
         tirarDados,
         moverPersonaje,

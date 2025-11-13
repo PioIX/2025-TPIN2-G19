@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 const tipo = "checkbox"
 import Button from "@/components/Button"
@@ -21,23 +21,10 @@ export default function Tablero() {
     const [userId, setUserId] = useState(0)
     const [joinCode, setJoinCode] = useState(0)
     const router = useRouter()
-    const { socket, isConnected, initializeGame } = useSocket()
+    const { socket, isConnected } = useSocket()
     const [numeroObtenido, setNumeroObtenido] = useState(0)
     const [modalAcusacion, setModalAcusacionAbierto] = useState(false)
 
-
-    useEffect(() => {
-        if (!socket || !isConnected) return
-
-        if (joinCode && userId) {
-            socket.emit("joinRoom", { room: joinCode, playerId: userId, joinCode: joinCode })
-        }
-
-        socket.on("playerJoined", (data) => {
-            console.log("Nuevo jugador se unió:", data)
-            fetchPlayers(joinCode)
-        })
-    }, [socket, joinCode, userId])
 
     useEffect(() => {
         const joinCode = sessionStorage.getItem("joinCode")
@@ -45,11 +32,13 @@ export default function Tablero() {
 
         setJoinCode(joinCode)
         setUserId(userId)
-
+        console.log("primero este")
+        console.log(joinCode)
+        console.log(userId)
     }, [])
 
 
-    /* useEffect(() => {
+    useEffect(() => {
         console.log("entro al useEffect de socket")
         if (!socket || !isConnected) return
 
@@ -65,15 +54,14 @@ export default function Tablero() {
                 fetchPlayers(joinCode)
             })
         }
-    }, [socket, isConnected]) */
+    }, [socket, isConnected])
 
     useEffect(() => {
         setJugadores((prev) => [...prev, userId]);
         console.log("jugadores en el tablero: ", jugadores)
 
         // Inicializar el juego
-        //socket.emit("initializeGame", { joinCode:joinCode })
-        initializeGame(joinCode)
+        socket.emit("initializeGame", { joinCode: joinCode })
         // ===== LISTENERS DEL SOCKET =====
 
         // Cuando el juego se inicializa
