@@ -56,6 +56,12 @@ const useSocket = (options = { withCredentials: true }, serverUrl = "http://loca
       // Aquí puedes verificar si la acusación es correcta y actualizar el estado
     });
 
+    
+    socketIo.on('gameInitialized', (data) => {
+      console.log('🎮 Juego inicializado:', data);
+      setGameState(data);
+    });
+
     socketIo.on('turno', (turno) => {
       console.log(`🎯 Es el turno de: ${turno}`);
       // Aquí puedes actualizar la UI para mostrar quién tiene el turno
@@ -113,6 +119,14 @@ const useSocket = (options = { withCredentials: true }, serverUrl = "http://loca
 
   // ========== FUNCIONES PARA EL JUEGO ==========
 
+  const initializeGame = (joinCode) => {
+    if (socket && isConnected) {
+      socket.emit('initializeGame', { joinCode });
+      console.log('🎮 Inicializando juego:', joinCode);
+    } else {
+      console.error('❌ Socket no conectado');
+    }
+  };
   // Enviar una sugerencia
   const enviarSugerencia = (jugador, quien, queArma, enQueHabitacion) => {
     if (socket && isConnected) {
@@ -155,32 +169,33 @@ const useSocket = (options = { withCredentials: true }, serverUrl = "http://loca
     }
   };
 
-  // Enviar mensaje de chat
-  const sendMessage = (roomId, message) => {
-    if (socket && isConnected) {
-      socket.emit('sendMessage', { room: roomId, message });
-      console.log('💬 Mensaje enviado:', message);
-    }
-  };
+      // Enviar mensaje de chat
+      const sendMessage = (roomId, message) => {
+        if (socket && isConnected) {
+          socket.emit('sendMessage', { room: roomId, message });
+          console.log('💬 Mensaje enviado:', message);
+        }
+      };
 
-  return { 
-    socket, 
-    isConnected, 
-    gameState, 
-    roomPlayers,
-    error,
-    // Funciones del Waiting Room
-    joinRoom,
-    leaveRoom,
-    startGame,
-    // Funciones del Juego
-    enviarSugerencia, 
-    hacerAcusacion, 
-    cambiarTurno,
-    tirarDados,
-    moverPersonaje,
-    sendMessage
-  };
-};
+      return {
+        socket,
+        isConnected,
+        gameState,
+        roomPlayers,
+        error,
+        // Funciones del Waiting Room
+        joinRoom,
+        leaveRoom,
+        startGame,
+        // Funciones del Juego
+        enviarSugerencia,
+        hacerAcusacion,
+        initializeGame,
+        cambiarTurno,
+        tirarDados,
+        moverPersonaje,
+        sendMessage
+      };
+    };
 
-export { useSocket };
+    export { useSocket };

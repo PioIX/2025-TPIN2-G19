@@ -8,7 +8,7 @@ import Anotador from "@/components/Anotador"
 import Grilla from "@/components/Grilla"
 import styles from "./page.module.css";
 import clsx from 'clsx';
-import Usuarios from "@/components/Usuarios"; 
+import Usuarios from "@/components/Usuarios";
 import { cardsCharacters, cardsWeapons, cardsRooms } from "@/classes/Card";
 import FormsAcusacion from "@/components/FormsAcusacion";
 import { useSocket } from "@/hooks/useSocket";
@@ -21,49 +21,69 @@ export default function Tablero() {
     const [userId, setUserId] = useState(0)
     const [joinCode, setJoinCode] = useState(0)
     const router = useRouter()
-    const { socket, isConnected } = useSocket()
-    const [numeroObtenido, setNumeroObtenido] = useState(0)    
+    const { socket, isConnected, initializeGame } = useSocket()
+    const [numeroObtenido, setNumeroObtenido] = useState(0)
     const [modalAcusacion, setModalAcusacionAbierto] = useState(false)
-    
+
+
     useEffect(() => {
         if (!socket || !isConnected) return
-        const joincode = sessionStorage.getItem("joinCode")
-        const userid = sessionStorage.getItem("userId")
-        setUserId(userid)
-        setJoinCode(joincode)
-        console.log("joincode en tablero:", joincode)
-        console.log("userId en tablero:", userid)
 
-        if (!joincode || !userid) {
-            router.push("/lobby")
-            return
+        if (joinCode && userId) {
+            socket.emit("joinRoom", { room: joinCode, playerId: userId, joinCode: joinCode })
         }
 
-        console.log("Conectado al tablero")
+        socket.on("playerJoined", (data) => {
+            console.log("Nuevo jugador se unió:", data)
+            fetchPlayers(joinCode)
+        })
+    }, [socket, joinCode, userId])
 
-        setJugadores((prev) => [...prev, userid]);
+    useEffect(() => {
+        const joinCode = sessionStorage.getItem("joinCode")
+        const userId = sessionStorage.getItem("userId")
+
+        setJoinCode(joinCode)
+        setUserId(userId)
+
+    }, [])
+
+
+    /* useEffect(() => {
+        console.log("entro al useEffect de socket")
+        if (!socket || !isConnected) return
+
+        const joinCode = sessionStorage.getItem("joinCode")
+        const userId = sessionStorage.getItem("userId")
+        console.log("Socket joinCode:", joinCode)
+
+        if (joinCode) {
+            socket.emit("joinRoom", { room: joinCode, playerId: userId, joinCode: joinCode })
+
+            socket.on("playerJoined", (data) => {
+                console.log("Nuevo jugador se unió:", data)
+                fetchPlayers(joinCode)
+            })
+        }
+    }, [socket, isConnected]) */
+
+    useEffect(() => {
+        setJugadores((prev) => [...prev, userId]);
         console.log("jugadores en el tablero: ", jugadores)
 
-        // Unirse a la sala
-        socket.emit("joinRoom", { 
-        room: joincode, 
-        playerId: userid, 
-        joinCode: joincode 
-        })
-
         // Inicializar el juego
-        socket.emit("initializeGame", { joincode })
-
+        //socket.emit("initializeGame", { joinCode:joinCode })
+        initializeGame(joinCode)
         // ===== LISTENERS DEL SOCKET =====
 
         // Cuando el juego se inicializa
-        socket.on("gameInitialized", (data) => {
+        socket.on("initializeGame", (data) => {
             console.log("Juego inicializado:", data)
             setJugadores(data.players)
             setTurnoActual(data.currentTurn)
-            
+
             // Encontrar mi índice
-            const miIdx = data.players.findIndex(p => p.userid == userid)
+            const miIdx = data.players.findIndex(p => p.userId == userId)
             setMiIndice(miIdx)
         })
 
@@ -76,9 +96,9 @@ export default function Tablero() {
         // Cuando un jugador se mueve
         socket.on("playerMoved", (data) => {
             console.log("Jugador movido:", data)
-            setJugadores(prev => 
-                prev.map(p => 
-                    p.userid === data.playerId 
+            setJugadores(prev =>
+                prev.map(p =>
+                    p.userid === data.playerId
                         ? { ...p, position: data.newPosition }
                         : p
                 )
@@ -98,7 +118,7 @@ export default function Tablero() {
             socket.off("playerMoved")
             socket.off("turnChanged")
         }
-    }, [socket, isConnected, router])
+    }, [])
 
     const moverJugador = (nuevaPosicion) => {
         const joinCode = sessionStorage.getItem("joinCode")
@@ -121,11 +141,11 @@ export default function Tablero() {
         return Math.floor(Math.random() * (max - min + 1)) + min
     }
 
-    function obtenerNumeroAleatorio () {
+    function obtenerNumeroAleatorio() {
         setNumeroObtenido(getRandomIntInclusive(1, 6))
         console.log(numeroObtenido)
     }
-    
+
     function repartirCartas() {
         if (!Array.isArray(usersInRoom) || usersInRoom.length === 0) {
             console.log("No hay usuarios en la sala");
@@ -136,7 +156,7 @@ export default function Tablero() {
     const cartasDisponiblesCharacters = cardsCharacters.slice();
     const cartasDisponiblesWeapons = cardsWeapons.slice();
     const cartasDisponiblesRooms = cardsRooms.slice();
-    
+
 
     async function obtenerUsuarios() {
         fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
@@ -144,7 +164,7 @@ export default function Tablero() {
             .then(result => {
                 setUsersInRoom(result)
             }
-        )
+            )
 
         for (let i = cartasDisponiblesCharacters.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -162,7 +182,7 @@ export default function Tablero() {
         }
 
         const asignaciones = usersInRoom.map((user, i) => ({
-            user, 
+            user,
             carta: cartasDisponiblesCharacters[i],
             key: i
         }));
@@ -182,8 +202,8 @@ export default function Tablero() {
     const cerrarModalAcusacion = () => {
         setModalAcusacionAbierto(false)
     }
-    
-    
+
+
     const categorieSospechosos = ["Coronel Mostaza", "pepip", "asdasd"];
     const categoriesArmas = ["Coronel Mostaza", "pepip", "asdasd"];
     const categorieSHabitaciones = ["Coronel Mostaza", "pepip", "asdasd"];
@@ -192,7 +212,7 @@ export default function Tablero() {
         <>
             <div className={styles["pagina-tablero"]}>
                 <Anotador></Anotador>
-                <Grilla 
+                <Grilla
                     currentUserId={userId}
                     players={jugadores}
                     currentTurn={turnoActual}
@@ -202,7 +222,7 @@ export default function Tablero() {
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
                 <button onClick={abrirModalAcusacion}>Hacer Acusación</button>
-                <FormsAcusacion/>
+                <FormsAcusacion />
                 <Usuarios></Usuarios>
             </div>
         </>
