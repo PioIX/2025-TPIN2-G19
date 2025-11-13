@@ -19,7 +19,7 @@ import FormsHipotesis from "@/components/FormsHipotesis"
 }*/
 
 
-export default function Grilla({ currentUserId, players, currentTurn, numeroObtenido, onMoverJugador }) {
+export default function Grilla({ currentUserId, jugadores, currentTurn, numeroObtenido, onMoverJugador }) {
     const tablero = [
 
         [1, 3, 3, 3, 3, 3, 4, 2, 4, 3, 3, 3, 3, 3, 3, 3],
@@ -44,12 +44,12 @@ export default function Grilla({ currentUserId, players, currentTurn, numeroObte
     const [habitacionActual, setHabitacionActual] = useState(null);
 
     const miTurno = () => {
-        const currentPlayer = players.find(p => p.turnOrder === currentTurn);
+        const currentPlayer = jugadores.find(p => p.turnOrder === currentTurn);
         return currentPlayer && currentPlayer.userId === currentUserId;
     };
 
     const pasarTurno = () => {
-        const nextTurn = (currentTurn + 1) % players.length;
+        const nextTurn = (currentTurn + 1) % jugadores.length;
         changeToNextTurn(joinCode, nextTurn);
     };
 
@@ -140,7 +140,7 @@ export default function Grilla({ currentUserId, players, currentTurn, numeroObte
 
     useEffect(() => {
         if (numeroObtenido > 0 && miTurno()) {
-            const currentPlayer = players.find(p => p.userId === currentUserId);
+            const currentPlayer = jugadores.find(p => p.userId === currentUserId);
             if (currentPlayer) {
                 const moves = calcularMovimientos(
                     currentPlayer.position.x,
@@ -152,7 +152,7 @@ export default function Grilla({ currentUserId, players, currentTurn, numeroObte
         }
     }, [numeroObtenido]);
 
-    const userPosition = players.find(p => p.userId == currentUserId)?.position || { x: -1, y: -1 };
+    const userPosition = jugadores.find(p => p.userId == currentUserId)?.position || { x: -1, y: -1 };
 
     return (
     <>
