@@ -40,10 +40,10 @@ export default function WaitingRoom() {
       })
     }
 
-    return () => {
+    /*return () => {
       socket.off("playerJoined")
       socket.off("gameStarted")
-    }
+    }*/
   }, [socket, isConnected, router])
 
   useEffect(() => {

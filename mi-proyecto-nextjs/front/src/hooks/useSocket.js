@@ -72,6 +72,11 @@ const useSocket = (options = { withCredentials: true }, serverUrl = "http://loca
       // Mostrar ganador y estadísticas
     });
 
+    socketIo.on('initializeGame', (data) => {
+      console.log('🎮 Juego inicializado:', data);
+      setGameState(data);
+    });
+
     // Manejo de errores
     socketIo.on('connect_error', (err) => {
       setError(err.message);
