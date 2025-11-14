@@ -34,16 +34,17 @@ export default function WaitingRoom() {
         fetchPlayers(joinCode)
       })
 
-      socket.on("gameStarted", () => {
-        console.log("¡El juego ha comenzado!")
+      // ✅ ESTE ES EL CAMBIO CLAVE: todos escuchan gameStarted y redirigen
+      socket.on("gameStarted", (data) => {
+        console.log("¡El juego ha comenzado! Redirigiendo al tablero...", data)
         router.push(`/tablero?joinCode=${joinCode}`)
       })
     }
 
-    /*return () => {
+    return () => {
       socket.off("playerJoined")
       socket.off("gameStarted")
-    }*/
+    }
   }, [socket, isConnected, router])
 
   useEffect(() => {
@@ -110,10 +111,10 @@ export default function WaitingRoom() {
     }
   }
 
-  // Actualizar jugadores cada 3 segundos - CORREGIDO
+  // Actualizar jugadores cada 3 segundos
   useEffect(() => {
     const interval = setInterval(() => {
-      const joinCode = sessionStorage.getItem("joinCode") // ✅ Usar joinCode
+      const joinCode = sessionStorage.getItem("joinCode")
       if (joinCode) {
         console.log("Polling players con joinCode:", joinCode)
         fetchPlayers(joinCode)
@@ -126,9 +127,15 @@ export default function WaitingRoom() {
   const handleStartGame = () => {
     if (!canStart || !isAdmin) return
 
-    const joinCode = sessionStorage.getItem("joinCode") // ✅ Usar joinCode
+    const joinCode = sessionStorage.getItem("joinCode")
+    
+    // ✅ SOLO emitir el evento, NO hacer router.push aquí
+    // El redirect lo hará el listener de gameStarted (arriba)
+    console.log("🎮 Admin emitiendo startGame para sala:", joinCode)
     socket.emit("startGame", { room: joinCode })
-    router.push("/tablero")
+    
+    // ❌ REMOVER esta línea:
+    // router.push("/tablero")
   }
 
   const handleLeaveRoom = async () => {
@@ -193,7 +200,7 @@ export default function WaitingRoom() {
                   <>
                     <div className={styles.playerAvatar}>
                       <img 
-                        src={`/imagenes/${player.photo || "default.jpg"}`} // si photo es vacío usa default.jpg
+                        src={`/imagenes/${player.photo || "default.jpg"}`}
                         alt={player.username}
                       />
                     </div>

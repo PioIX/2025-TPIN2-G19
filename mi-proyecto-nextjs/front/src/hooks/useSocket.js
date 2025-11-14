@@ -14,7 +14,7 @@ export function useSocket() {
   const [turnChanged, setTurnChanged] = useState(null);
 
   useEffect(() => {
-    const socket = io("http://localhost:3001", {
+    const socket = io("http://localhost:4000", {
       transports: ["websocket"],
       reconnection: true
     });
