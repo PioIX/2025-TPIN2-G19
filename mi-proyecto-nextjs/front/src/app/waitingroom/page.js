@@ -35,15 +35,15 @@ export default function WaitingRoom() {
       })
 
       //todos escuchan gameStarted y redirigen
-      socket.on("initializeGame", () => {
-        console.log("¡El juego ha comenzado! Redirigiendo al tablero...");
-        router.push("/tablero") // Todos van al tablero
+      socket.on("gameStarted", (data) => {
+        console.log("¡El juego ha comenzado! Redirigiendo al tablero...", data)
+        router.push(`/tablero?joinCode=${joinCode}`)
       })
     }
 
     return () => {
       socket.off("playerJoined")
-      socket.off("initializeGame")
+      socket.off("gameStarted")
     }
   }, [socket, isConnected, router])
 
