@@ -352,7 +352,7 @@ app.delete('/characters/:id', async (req, res) => {
 
 // ========= END POINT SOLUCION ===============
 app.post("/iniciarPartida", async (req, res) => {
-  const { joinCode, cardsCharacters, cardsWeapons, cardsRooms} = req.body;
+  const { joinCode, cardsCharacters, cardsWeapons, cardsRooms } = req.body;
 
   if (!joinCode) {
     return res.status(400).json({ error: "Falta joinCode" });
@@ -369,7 +369,7 @@ app.post("/iniciarPartida", async (req, res) => {
         `)
     console.log("Usuarios dentro de la sala: ", response)
     const jugadores = response;
-    
+
     if (!jugadores || jugadores.length === 0) {
       return res.status(400).json({ error: "No hay jugadores en la sala" });
     }
@@ -725,6 +725,18 @@ io.on("connection", (socket) => {
     console.log(`✅ Jugador ${data.playerId} se unió a ${req.session.room}`);
   });
 
+  socket.on("startGame", ({ room }) => {
+    const game = games[room];
+    if (!game) return;
+
+    game.started = true;
+
+    // Avisar a todos los jugadores que el juego empezó
+    io.to(room).emit("gameStarted", { message: "El juego comenzó" });
+
+    console.log(`🎮 Juego iniciado en sala ${room}`);
+  });
+
   // --- Inicializar juego ---
   socket.on("initializeGame", ({ joinCode }) => {
     const game = games[joinCode];
@@ -787,7 +799,7 @@ io.on("connection", (socket) => {
 
   // --- Desconexión ---
   socket.on("disconnect", () => {
-    console.log("⛔ Usuario desconectado:", socket.playerId);
+    console.log("Usuario desconectado:", socket.playerId);
     if (socket.playerId && socket.joinCode) {
       io.to(socket.joinCode).emit("playerLeft", { playerId: socket.playerId });
     }

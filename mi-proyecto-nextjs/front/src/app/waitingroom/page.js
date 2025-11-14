@@ -8,7 +8,7 @@ import styles from "./waitingroom.module.css"
 
 export default function WaitingRoom() {
   const router = useRouter()
-  const { socket, isConnected } = useSocket()
+  const { socket, isConnected, gameInitialized } = useSocket()
   const [roomData, setRoomData] = useState(null)
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -17,7 +17,7 @@ export default function WaitingRoom() {
 
   console.log("ENTRO A WAITING ROOM")
 
-  // Socket: Escuchar cuando un jugador se une
+  // Escuchar cuando un jugador se une
   useEffect(() => {
     console.log("entro al useEffect de socket")
     if (!socket || !isConnected) return
@@ -25,25 +25,25 @@ export default function WaitingRoom() {
     const joinCode = sessionStorage.getItem("joinCode")
     const userId = sessionStorage.getItem("userId")
     console.log("Socket joinCode:", joinCode)
-    
+
     if (joinCode) {
       socket.emit("joinRoom", { room: joinCode, playerId: userId, joinCode: joinCode })
-      
+
       socket.on("playerJoined", (data) => {
         console.log("Nuevo jugador se unió:", data)
         fetchPlayers(joinCode)
       })
 
-      // ✅ ESTE ES EL CAMBIO CLAVE: todos escuchan gameStarted y redirigen
-      socket.on("gameStarted", (data) => {
-        console.log("¡El juego ha comenzado! Redirigiendo al tablero...", data)
-        router.push(`/tablero?joinCode=${joinCode}`)
+      //todos escuchan gameStarted y redirigen
+      socket.on("initializeGame", () => {
+        console.log("¡El juego ha comenzado! Redirigiendo al tablero...");
+        router.push("/tablero") // Todos van al tablero
       })
     }
 
     return () => {
       socket.off("playerJoined")
-      socket.off("gameStarted")
+      socket.off("initializeGame")
     }
   }, [socket, isConnected, router])
 
@@ -52,7 +52,7 @@ export default function WaitingRoom() {
       try {
         const joinCode = sessionStorage.getItem("joinCode")
         const userId = sessionStorage.getItem("userId")
-        
+
         console.log("Fetching room data con joinCode:", joinCode)
 
         if (!joinCode) {
@@ -64,15 +64,15 @@ export default function WaitingRoom() {
         // Obtener datos de la sala
         const roomRes = await fetch(`http://localhost:4000/room?joinCode=${joinCode}`)
         console.log("Room response status:", roomRes.status)
-        
+
         if (!roomRes.ok) {
           console.error("Error al obtener sala, status:", roomRes.status)
           throw new Error("Sala no encontrada")
         }
-        
+
         const room = await roomRes.json()
         console.log("Room data obtenida:", room)
-        
+
         setRoomData(room)
         setIsAdmin(room.admin == userId)
 
@@ -94,13 +94,13 @@ export default function WaitingRoom() {
       console.log("Fetching players con joinCode:", joinCode)
       const res = await fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
       console.log("fetch players response:", res)
-      
+
       if (!res.ok) throw new Error("Error al obtener jugadores")
-      
+
       const data = await res.json()
       console.log("data fetch players:", data)
       setPlayers(data)
-      
+
       // Verificar si todos los jugadores se unieron
       if (roomData && data.length == roomData.players) {
         setCanStart(true)
@@ -128,14 +128,11 @@ export default function WaitingRoom() {
     if (!canStart || !isAdmin) return
 
     const joinCode = sessionStorage.getItem("joinCode")
-    
+
     // ✅ SOLO emitir el evento, NO hacer router.push aquí
     // El redirect lo hará el listener de gameStarted (arriba)
     console.log("🎮 Admin emitiendo startGame para sala:", joinCode)
     socket.emit("startGame", { room: joinCode })
-    
-    // ❌ REMOVER esta línea:
-    // router.push("/tablero")
   }
 
   const handleLeaveRoom = async () => {
@@ -146,7 +143,7 @@ export default function WaitingRoom() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId })
       })
-      
+
       sessionStorage.removeItem("gameRoomId")
       sessionStorage.removeItem("joinCode")
       router.push("/lobby")
@@ -179,7 +176,7 @@ export default function WaitingRoom() {
     <div className={styles.waitingContainer}>
       <div className={styles.waitingCard}>
         <h1 className={styles.title}>{roomData.nameRoom}</h1>
-        
+
         <div className={styles.codeSection}>
           <p className={styles.codeLabel}>Código de sala:</p>
           <div className={styles.codeBox} onClick={handleCopyCode}>
@@ -192,14 +189,14 @@ export default function WaitingRoom() {
           <h2>Jugadores ({players.length}/{roomData.players})</h2>
           <div className={styles.playersGrid}>
             {playerSlots.map((player, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={`${styles.playerSlot} ${player ? styles.filled : styles.empty}`}
               >
                 {player ? (
                   <>
                     <div className={styles.playerAvatar}>
-                      <img 
+                      <img
                         src={`/imagenes/${player.photo || "default.jpg"}`}
                         alt={player.username}
                       />
@@ -224,9 +221,9 @@ export default function WaitingRoom() {
 
         <div className={styles.actions}>
           {isAdmin && canStart && (
-            <Button 
-              text="¡Comenzar juego!" 
-              onClick={handleStartGame} 
+            <Button
+              text="¡Comenzar juego!"
+              onClick={handleStartGame}
               page="waiting"
             />
           )}
@@ -240,10 +237,10 @@ export default function WaitingRoom() {
               Esperando a que el admin inicie el juego...
             </p>
           )}
-          
-          <Button 
-            text="Salir de la sala" 
-            onClick={handleLeaveRoom} 
+
+          <Button
+            text="Salir de la sala"
+            onClick={handleLeaveRoom}
             page="waiting"
           />
         </div>

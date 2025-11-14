@@ -34,6 +34,11 @@ export function useSocket() {
       console.log("🃏 Cartas recibidas por socket:", cartas);
       setCartasRepartidas(cartas);
     });
+     socketInstance.on("gameStarted", () => {
+      console.log("🎮 Evento gameStarted recibido");
+      setGameInitialized(true); // esto indica que todos deben ir al tablero
+    });
+
 
     return () => socketInstance.disconnect();
   }, []);
