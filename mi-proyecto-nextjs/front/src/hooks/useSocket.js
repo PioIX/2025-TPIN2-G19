@@ -1,84 +1,53 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
 export function useSocket() {
-  const socketRef = useRef(null);
+  const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
 
-  // ESTADOS QUE EL TABLERO PUEDE ESCUCHAR
   const [playerJoined, setPlayerJoined] = useState(null);
   const [playerLeft, setPlayerLeft] = useState(null);
   const [gameInitialized, setGameInitialized] = useState(null);
   const [diceRolled, setDiceRolled] = useState(null);
   const [playerMoved, setPlayerMoved] = useState(null);
   const [turnChanged, setTurnChanged] = useState(null);
+  const [cartasRepartidas, setCartasRepartidas] = useState(null);
 
   useEffect(() => {
-    const socket = io("http://localhost:4000", {
+    const socketInstance = io("http://localhost:4000", {
       transports: ["websocket"],
       reconnection: true
     });
 
-    socketRef.current = socket;
+    setSocket(socketInstance);
 
-    // --- CONEXIÓN ---
-    socket.on("connect", () => {
-      console.log("✅ Conectado a WebSocket");
-      setIsConnected(true);
+    socketInstance.on("connect", () => console.log("🔌 Socket conectado:", socketInstance.id) || setIsConnected(true));
+    socketInstance.on("disconnect", () => setIsConnected(false));
+
+    socketInstance.on("playerJoined", setPlayerJoined);
+    socketInstance.on("playerLeft", setPlayerLeft);
+    socketInstance.on("initializeGame", setGameInitialized);
+    socketInstance.on("diceRolled", setDiceRolled);
+    socketInstance.on("playerMoved", setPlayerMoved);
+    socketInstance.on("turnChanged", setTurnChanged);
+    socketInstance.on("cartas_repartidas", (cartas) => {
+      console.log("🃏 Cartas recibidas por socket:", cartas);
+      setCartasRepartidas(cartas);
     });
 
-    socket.on("disconnect", () => {
-      console.log("❌ Desconectado del WebSocket");
-      setIsConnected(false);
-    });
-
-    // --- LISTENERS ÚNICOS ---
-    socket.on("playerJoined", (data) => {
-      console.log("👤 playerJoined:", data);
-      setPlayerJoined(data);
-    });
-
-    socket.on("playerLeft", (data) => {
-      console.log("👋 playerLeft:", data);
-      setPlayerLeft(data);
-    });
-
-    socket.on("initializeGame", (data) => {
-      console.log("🎮 initializeGame:", data);
-      setGameInitialized(data);
-    });
-
-    socket.on("diceRolled", (data) => {
-      console.log("🎲 diceRolled:", data);
-      setDiceRolled(data);
-    });
-
-    socket.on("playerMoved", (data) => {
-      console.log("🚶 playerMoved:", data);
-      setPlayerMoved(data);
-    });
-
-    socket.on("turnChanged", (data) => {
-      console.log("🔄 turnChanged:", data);
-      setTurnChanged(data);
-    });
-
-    return () => {
-      console.log("🔌 Socket cleanup");
-      socket.disconnect();
-    };
+    return () => socketInstance.disconnect();
   }, []);
 
   return {
-    socket: socketRef.current,
+    socket,
     isConnected,
-
-    // Eventos
     playerJoined,
     playerLeft,
     gameInitialized,
     diceRolled,
     playerMoved,
-    turnChanged
+    turnChanged,
+    cartasRepartidas
   };
 }
+

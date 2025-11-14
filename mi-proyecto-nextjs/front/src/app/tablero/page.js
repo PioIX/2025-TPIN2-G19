@@ -2,155 +2,224 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-const tipo = "checkbox"
 import Button from "@/components/Button"
 import Anotador from "@/components/Anotador"
 import Grilla from "@/components/Grilla"
-import styles from "./page.module.css";
-import clsx from 'clsx';
-import Usuarios from "@/components/Usuarios";
-import { cardsCharacters, cardsWeapons, cardsRooms } from "@/classes/Card";
-import FormsAcusacion from "@/components/FormsAcusacion";
-import { useSocket } from "@/hooks/useSocket";
+import styles from "./page.module.css"
+import clsx from 'clsx'
+import Usuarios from "@/components/Usuarios"
+import { cardsCharacters, cardsWeapons, cardsRooms } from "@/classes/Card"
+import FormsAcusacion from "@/components/FormsAcusacion"
+import { useSocket } from "@/hooks/useSocket"
 
 export default function Tablero() {
     const [usersInRoom, setUsersInRoom] = useState([])
     const [jugadores, setJugadores] = useState([])
     const [turnoActual, setTurnoActual] = useState(0)
-    const [miIndice, setMiIndice] = useState(null)
     const [userId, setUserId] = useState(null)
     const [joinCode, setJoinCode] = useState(null)
-    const router = useRouter()
-    const { socket, isConnected } = useSocket()
     const [numeroObtenido, setNumeroObtenido] = useState(0)
     const [modalAcusacion, setModalAcusacionAbierto] = useState(false)
     const [seUnio, setSeUnio] = useState(false)
+    const [misCartas, setMisCartas] = useState([])
+    const router = useRouter()
 
+    const { socket, isConnected, gameInitialized, diceRolled, playerMoved, turnChanged, cartasRepartidas } = useSocket()
+
+    // Recuperar joinCode y userId de sessionStorage
     useEffect(() => {
         const joinCode = sessionStorage.getItem("joinCode")
         const userId = sessionStorage.getItem("userId")
-        const playerId = sessionStorage.getItem("playerId")
-
         setJoinCode(joinCode)
         setUserId(userId)
-        console.log("primero este")
-        console.log(joinCode)
-        console.log(userId)
     }, [])
 
+    // Unirse al room
     useEffect(() => {
-        console.log("entro al useEffect de socket")
-        if (!socket || !isConnected) return
-        if (seUnio == true) return
+        if (!socket || !isConnected || seUnio) return
+        if (!joinCode || !userId) return
 
-        if (!joinCode || !userId) {
-            console.log("Esperando joinCode y userId...")
+        socket.emit("joinRoom", { room: joinCode, playerId: userId, joinCode })
+        setSeUnio(true)
+    }, [socket, isConnected, joinCode, userId, seUnio])
+
+    // Inicializar juego
+    useEffect(() => {
+        if (!socket || !isConnected || !joinCode) return
+        socket.emit("initializeGame", { joinCode })
+    }, [socket, isConnected, joinCode])
+
+    // Actualizar jugadores y turno al inicializar juego
+    useEffect(() => {
+        if (!gameInitialized) return
+        setJugadores(gameInitialized.players)
+        setTurnoActual(gameInitialized.currentTurn)
+    }, [gameInitialized])
+
+    // Actualizar dado tirado
+    useEffect(() => {
+        if (!diceRolled) return
+        setNumeroObtenido(diceRolled.diceValue)
+    }, [diceRolled])
+
+    // Actualizar posición de jugador movido
+    useEffect(() => {
+        if (!playerMoved) return
+        setJugadores(prev => prev.map(j => 
+            j.userId === playerMoved.playerId ? { ...j, position: playerMoved.newPosition } : j
+        ))
+    }, [playerMoved])
+
+    // Actualizar turno
+    useEffect(() => {
+        if (!turnChanged) return
+        setTurnoActual(turnChanged.currentTurn)
+        setNumeroObtenido(0)
+    }, [turnChanged])
+
+    // Obtener usuarios en la sala
+    useEffect(() => {
+        if (!socket || !isConnected || !joinCode) return
+
+        const handleUsersInRoom = async () => {
+            try {
+                const res = await fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
+                const usuarios = await res.json()
+                setUsersInRoom(usuarios)
+                setJugadores(usuarios)
+            } catch (err) {
+                console.error("Error al obtener usuarios:", err)
+            }
+        }
+
+        handleUsersInRoom()
+    }, [socket, isConnected, joinCode])
+
+    // Manejar cartas repartidas desde socket
+    useEffect(() => {
+        if (!socket) return
+        const handleCartas = (cartas) => setMisCartas(cartas)
+        socket.on("cartas_repartidas", handleCartas)
+        return () => socket.off("cartas_repartidas", handleCartas)
+    }, [socket])
+
+    // Mantener cartasRepartidas del hook
+    useEffect(() => {
+        if (cartasRepartidas) setMisCartas(cartasRepartidas)
+    }, [cartasRepartidas])
+
+    // Función para mover jugador
+    const moverJugador = (nuevaPosicion) => {
+        if (!socket || !joinCode || !userId) return
+        socket.emit("movePlayer", { joinCode, playerId: userId, newPosition: nuevaPosicion })
+    }
+
+    // Tirar dado
+    const obtenerNumeroAleatorio = () => {
+        if (!socket || !joinCode || !userId) return
+
+        const miTurno = jugadores.find(j => j.turnOrder === turnoActual)?.userId === userId
+        if (!miTurno) {
+            alert("⚠️ No es tu turno")
             return
         }
 
-        socket.emit("joinRoom", { room: joinCode, playerId: userId, joinCode: joinCode })
-        console.log("se unio el jugador", userId, "en el room ", joinCode)
-        setSeUnio(true)
-
-        return () => { }
-    }, [socket, isConnected, joinCode, userId])
-
-    useEffect(() => {
-        if (!socket || !isConnected || !joinCode || !userId) return
-
-        console.log("JUGADORES EN LA SALA: ", jugadores)
-
-        socket.emit("initializeGame", { joinCode })
-
-        return () => { }
-    }, [socket, isConnected, joinCode, userId])
-
-    const moverJugador = (nuevaPosicion) => {
-        const joinCode = sessionStorage.getItem("joinCode")
-        const userId = sessionStorage.getItem("userId")
-
-        socket.emit("movePlayer", {
-            joinCode,
-            playerId: userId,
-            newPosition: nuevaPosicion
-        })
+        const diceValue = Math.floor(Math.random() * 6) + 1
+        socket.emit("rollDice", { joinCode, playerId: userId, diceValue })
     }
 
-    function getRandomIntInclusive(min, max) {
-        min = Math.ceil(min)
-        max = Math.floor(max)
-        return Math.floor(Math.random() * (max - min + 1)) + min
-    }
+    // Pasar turno
+    const pasarTurno = () => {
+        if (!socket || !joinCode || !userId) return
 
-    function obtenerNumeroAleatorio() {
-        setNumeroObtenido(getRandomIntInclusive(1, 6))
-        console.log(numeroObtenido)
-    }
-
-    function repartirCartas() {
-        if (!Array.isArray(usersInRoom) || usersInRoom.length === 0) {
-            console.log("No hay usuarios en la sala");
-            return;
+        const miTurno = jugadores.find(j => j.turnOrder === turnoActual)?.userId === userId
+        if (!miTurno) {
+            alert("⚠️ No es tu turno")
+            return
         }
 
-        const cartasDisponiblesCharacters = cardsCharacters.slice();
-        const cartasDisponiblesWeapons = cardsWeapons.slice();
-        const cartasDisponiblesRooms = cardsRooms.slice();
-
-        for (let i = cartasDisponiblesCharacters.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [cartasDisponiblesCharacters[i], cartasDisponiblesCharacters[j]] = [cartasDisponiblesCharacters[j], cartasDisponiblesCharacters[i]];
-        }
-
-        for (let i = cartasDisponiblesWeapons.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [cartasDisponiblesWeapons[i], cartasDisponiblesWeapons[j]] = [cartasDisponiblesWeapons[j], cartasDisponiblesWeapons[i]];
-        }
-
-        for (let i = cartasDisponiblesRooms.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [cartasDisponiblesRooms[i], cartasDisponiblesRooms[j]] = [cartasDisponiblesRooms[j], cartasDisponiblesRooms[i]];
-        }
-
-        const asignaciones = usersInRoom.map((user, i) => ({
-            user,
-            carta: cartasDisponiblesCharacters[i],
-            key: i
-        }));
-
-        return asignaciones;
+        const nextTurn = (turnoActual + 1) % jugadores.length
+        socket.emit("changeTurn", { joinCode, nextTurn })
     }
 
-    const abrirModalAcusacion = () => {
-        setModalAcusacionAbierto(true)
-        return modalAcusacion
+    // Repartir cartas
+    const repartirCartas = async () => {
+        if (!joinCode || !userId) return
+        try {
+            const res = await fetch("http://localhost:4000/iniciarPartida", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ joinCode, userId, cardsCharacters, cardsWeapons, cardsRooms })
+            })
+            const data = await res.json()
+            if (data.cartasJugador) setMisCartas(data.cartasJugador)
+            console.log("🎴 Mis cartas:", data.cartasJugador)
+        } catch (err) {
+            console.error("❌ Error al repartir cartas:", err)
+        }
     }
 
-    const cerrarModalAcusacion = () => {
-        setModalAcusacionAbierto(false)
-    }
-
-    const categorieSospechosos = ["Coronel Mostaza", "pepip", "asdasd"];
-    const categoriesArmas = ["Coronel Mostaza", "pepip", "asdasd"];
-    const categorieSHabitaciones = ["Coronel Mostaza", "pepip", "asdasd"];
+    const abrirModalAcusacion = () => setModalAcusacionAbierto(true)
+    const cerrarModalAcusacion = () => setModalAcusacionAbierto(false)
 
     return (
-        <>
-            <div className={styles["pagina-tablero"]}>
-                <Anotador></Anotador>
-                <Grilla
-                    currentUserId={userId}
-                    jugadores={jugadores}
-                    currentTurn={turnoActual}
-                    numeroObtenido={numeroObtenido}
-                    onMoverJugador={moverJugador}
-                />
-                <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
-                <button onClick={repartirCartas}>repartir cartas</button>
-                <button onClick={abrirModalAcusacion}>Hacer Acusación</button>
-                <FormsAcusacion />
-                <Usuarios></Usuarios>
+        <div className={styles["pagina-tablero"]}>
+            {/* Panel de info */}
+            <div style={{
+                position: 'fixed', top: '10px', right: '10px', backgroundColor: 'rgba(0,0,0,0.9)',
+                color: 'white', padding: '15px', borderRadius: '8px', fontSize: '14px',
+                zIndex: 1000, minWidth: '200px'
+            }}>
+                <h3 style={{ margin: '0 0 10px 0', borderBottom: '2px solid #4CAF50', paddingBottom: '5px' }}>
+                    📊 Info
+                </h3>
+                <p>🎮 <strong>Sala:</strong> {joinCode || "..."}</p>
+                <p>👤 <strong>Tu ID:</strong> {userId || "..."}</p>
+                <p>🎯 <strong>Turno:</strong> Jugador {turnoActual + 1}</p>
+                <p>🎲 <strong>Dado:</strong> {numeroObtenido || "❌"}</p>
+                <p>👥 <strong>Jugadores:</strong> {jugadores.length}</p>
+                <p>🔌 <strong>Socket:</strong> {isConnected ? "✅" : "❌"}</p>
             </div>
-        </>
+
+            <Anotador />
+
+            <Grilla
+                currentUserId={userId}
+                jugadores={jugadores}
+                currentTurn={turnoActual}
+                numeroObtenido={numeroObtenido}
+                onMoverJugador={moverJugador}
+            />
+
+            {/* Botones */}
+            <div style={{
+                position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+                display: 'flex', gap: '10px', zIndex: 1000
+            }}>
+                <button onClick={obtenerNumeroAleatorio} style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    🎲 Tirar dado
+                </button>
+
+                <button onClick={pasarTurno} style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#2196F3', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    ⏭️ Pasar turno
+                </button>
+
+                <button onClick={repartirCartas} style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#FF9800', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    🎴 Repartir cartas
+                </button>
+
+                <button onClick={abrirModalAcusacion} style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    🔍 Hacer Acusación
+                </button>
+            </div>
+
+            {modalAcusacion && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+                    <FormsAcusacion onCerrar={cerrarModalAcusacion} />
+                </div>
+            )}
+
+            <Usuarios jugadores={jugadores} />
+        </div>
     )
 }

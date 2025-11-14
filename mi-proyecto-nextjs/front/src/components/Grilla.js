@@ -5,20 +5,6 @@ import styles from "./Grilla.module.css"  // Importa los estilos de CSS Modules
 import { useState, useEffect } from "react"
 import FormsHipotesis from "@/components/FormsHipotesis"
 
-/*export default function Grilla (props) {
-    const cuadrados = Array(144).fill(null); 
-    return (
-        <>
-            <div className={styles.tablero}>
-                {cuadrados.map((_, index) => (
-                    <div key={index} className={styles.cuadrado}></div>
-                ))}
-            </div>
-        </>
-    )
-}*/
-
-
 export default function Grilla({ currentUserId, jugadores, currentTurn, numeroObtenido, onMoverJugador }) {
     const tablero = [
 
@@ -103,7 +89,8 @@ export default function Grilla({ currentUserId, jugadores, currentTurn, numeroOb
         setPossibleMoves([]);
 
         const tipoCasilla = tablero[nuevaPosicion.x][nuevaPosicion.y];
-        
+
+        //si entra a una habitacion
         if (tipoCasilla === 5) {
             const habitacion = tipoHabitacion(nuevaPosicion.x, nuevaPosicion.y);
             setHabitacionActual(habitacion);
@@ -119,8 +106,14 @@ export default function Grilla({ currentUserId, jugadores, currentTurn, numeroOb
     };
 
     const confirmarMovimiento = () => {
+        if (!miTurno()) {
+            alert("No es tu turno");
+            return;
+        }
+
         if (!selectedMove) return;
         moverJugador(selectedMove);
+
         setSelectedMove(null);
         setPossibleMoves([]);
     };
@@ -150,72 +143,73 @@ export default function Grilla({ currentUserId, jugadores, currentTurn, numeroOb
                 setPossibleMoves(moves);
             }
         }
-    }, [numeroObtenido]);
+    }, [numeroObtenido, currentTurn, jugadores, currentUserId]);
 
+    //obtener posicion
     const userPosition = jugadores.find(p => p.userId == currentUserId)?.position || { x: -1, y: -1 };
 
     return (
-    <>
-        <div className={styles.tablero}>
-            {tablero.map((fila, filaIndex) =>
-                fila.map((casilla, colIndex) => {
-                    let clase = "";
-                    let textoCasilla = "";
-                    if (casilla === 1) clase = "tunel", textoCasilla = "Tunel";
-                    if (casilla === 2) clase = "salida", textoCasilla = "Salida";
-                    if (casilla === 3) clase = "habitacion";
-                    if (casilla === 4) clase = "casillaNormal";
-                    if (casilla === 5) clase = "entrada", textoCasilla = "entrada";
-                    if (userPosition.x === filaIndex && userPosition.y === colIndex) clase = ' usuario';
-                    const isPossible = possibleMoves.some(m => m.x === filaIndex && m.y === colIndex);
-                    if (isPossible) clase += ' posible';
-                    if (selectedMove && selectedMove.x === filaIndex && selectedMove.y === colIndex) clase += ' seleccionado';
-                    return <div key={`${filaIndex}-${colIndex}`} className={styles[clase]} onClick={() => seleccionarCasilla(filaIndex, colIndex)}>{textoCasilla}</div>;
-                })
+        <>
+            <div className={styles.tablero}>
+                {tablero.map((fila, filaIndex) =>
+                    fila.map((casilla, colIndex) => {
+                        let clase = "";
+                        let textoCasilla = "";
+                        if (casilla === 1) clase = "tunel", textoCasilla = "Tunel";
+                        if (casilla === 2) clase = "salida", textoCasilla = "Salida";
+                        if (casilla === 3) clase = "habitacion";
+                        if (casilla === 4) clase = "casillaNormal";
+                        if (casilla === 5) clase = "entrada", textoCasilla = "entrada";
+                        if (userPosition.x === filaIndex && userPosition.y === colIndex) clase = ' usuario';
+                        const isPossible = possibleMoves.some(m => m.x === filaIndex && m.y === colIndex);
+                        if (isPossible) clase += ' posible';
+                        if (selectedMove && selectedMove.x === filaIndex && selectedMove.y === colIndex) clase += ' seleccionado';
+                        return <div key={`${filaIndex}-${colIndex}`} className={styles[clase]} onClick={() => seleccionarCasilla(filaIndex, colIndex)}>{textoCasilla}</div>;
+                    })
+                )}
+            </div>
+
+            {selectedMove && miTurno() && (
+                <button onClick={confirmarMovimiento}>Confirmar movimiento</button>
             )}
-        </div>
 
-        {selectedMove && miTurno() && (
-            <button onClick={confirmarMovimiento}>Confirmar movimiento</button>
-        )}
-
-        {/* Modal de decisión de entrada */}
-        {mostrarDecisionEntrada && (
-            <div style={styles.modalOverlay}>
-                <div style={styles.modalContent}>
-                    <h3>Has llegado a la entrada de {habitacionActual}</h3>
-                    <p>¿Deseas entrar a la habitación?</p>
-                    <div style={styles.modalButtons}>
-                        <button
-                            onClick={() => decidirEntrarHabitacion(true)}
-                            style={{ ...styles.btn, ...styles.btnEntrar }}
-                        >
-                            Entrar
-                        </button>
-                        <button
-                            onClick={() => decidirEntrarHabitacion(false)}
-                            style={{ ...styles.btn, ...styles.btnEsperar }}
-                        >
-                            Esperar al próximo turno
-                        </button>
+            {/* Modal de decisión de entrada */}
+            {mostrarDecisionEntrada && (
+                <div style={styles.modalOverlay}>
+                    <div style={styles.modalContent}>
+                        <h3>Has llegado a la entrada de {habitacionActual}</h3>
+                        <p>¿Deseas entrar a la habitación?</p>
+                        <div style={styles.modalButtons}>
+                            <button
+                                onClick={() => decidirEntrarHabitacion(true)}
+                                style={{ ...styles.btn, ...styles.btnEntrar }}
+                            >
+                                Entrar
+                            </button>
+                            <button
+                                onClick={() => decidirEntrarHabitacion(false)}
+                                style={{ ...styles.btn, ...styles.btnEsperar }}
+                            >
+                                Esperar al próximo turno
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
+            )}
 
-        {/* Modal de Hipótesis */}
-        {mostrarHipotesis && Hipotesis && (
-            <div style={styles.modalOverlay}>
-                <div style={styles.modalContentHipotesis}>
-                    <FormsHipotesis
-                        habitacion={habitacionActual}
-                        onCerrar={cerrarHipotesis}
-                    />
+            {/* Modal de Hipótesis */}
+            {mostrarHipotesis && Hipotesis && (
+                <div style={styles.modalOverlay}>
+                    <div style={styles.modalContentHipotesis}>
+                        <FormsHipotesis
+                            habitacion={habitacionActual}
+                            onCerrar={cerrarHipotesis}
+                        />
+                    </div>
                 </div>
-            </div>
-        )}
+            )}
 
-    </>
+        </>
 
     );
 };

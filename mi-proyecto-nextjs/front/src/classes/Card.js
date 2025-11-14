@@ -38,3 +38,5 @@ cardsRooms.push(new CardRooms("Habitación"))
 cardsRooms.push(new CardRooms("Comedor"))
 cardsRooms.push(new CardRooms("Cocina"))
 cardsRooms.push(new CardRooms("Baño"))
+
+export { CardCharacter, CardWeapons, CardRooms };

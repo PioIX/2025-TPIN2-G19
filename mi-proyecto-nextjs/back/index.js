@@ -4,6 +4,8 @@ var cors = require('cors');
 const { realizarQuery } = require('./modulos/mysql');
 const session = require("express-session");
 
+
+
 var app = express(); //Inicializo express
 var port = process.env.PORT || 4000; //Ejecuto el servidor en el puerto 3000
 
@@ -46,7 +48,6 @@ io.use((socket, next) => {
 
 
 //PROYECTO
-
 app.post('/createCode', async (req, res) => {
   const { name, players, admin } = req.body;
 
@@ -216,7 +217,6 @@ app.get('/user/:id', async (req, res) => {
 })
 
 
-// -------------- aca comienza el proyecto del chat
 
 // ========== ENDPOINTS PARA ARMAS ==========
 
@@ -349,6 +349,94 @@ app.delete('/characters/:id', async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar personaje' })
   }
 })
+
+// ========= END POINT SOLUCION ===============
+app.post("/iniciarPartida", async (req, res) => {
+  const { joinCode, cardsCharacters, cardsWeapons, cardsRooms} = req.body;
+
+  if (!joinCode) {
+    return res.status(400).json({ error: "Falta joinCode" });
+  }
+
+  try {
+    // 1. Obtener usuarios de la sala desde la base de datos
+    const response = await realizarQuery(`
+          SELECT Users.userId, Users.username, Users.photo
+          FROM Users
+          INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
+          INNER JOIN GameRooms on GameRooms.gameRoomId= UsersXRooms.gameRoomId
+          WHERE GameRooms.joinCode = '${joinCode}';   
+        `)
+    console.log("Usuarios dentro de la sala: ", response)
+    const jugadores = response;
+    
+    if (!jugadores || jugadores.length === 0) {
+      return res.status(400).json({ error: "No hay jugadores en la sala" });
+    }
+
+    // 2. Copias del mazo
+
+    let characters = Array.isArray(cardsCharacters) && cardsCharacters.length ? [...cardsCharacters] : null;
+    let weapons = Array.isArray(cardsWeapons) && cardsWeapons.length ? [...cardsWeapons] : null;
+    let rooms = Array.isArray(cardsRooms) && cardsRooms.length ? [...cardsRooms] : null;
+
+    // 3. Crear solución secreta
+    const solucion = {
+      asesino: characters.splice(Math.floor(Math.random() * characters.length), 1)[0],
+      arma: weapons.splice(Math.floor(Math.random() * weapons.length), 1)[0],
+      habitacion: rooms.splice(Math.floor(Math.random() * rooms.length), 1)[0],
+    };
+
+    console.log(`🔒 Solución secreta para ${joinCode}:`, solucion);
+
+    // 4. Armar mazo restante
+    const mazoRestante = [...characters, ...weapons, ...rooms]
+      .sort(() => Math.random() - 0.5); // mezclar
+
+    // 5. Reparto equitativo
+    const manos = {};
+    jugadores.forEach(j => manos[j.userId] = []);
+    let turno = 0;
+    for (const carta of mazoRestante) {
+      const userId = jugadores[turno].userId;
+      manos[userId].push(carta);
+      turno = (turno + 1) % jugadores.length;
+    }
+
+    // 6) emitir a cada jugador su mano por socket
+    for (const j of jugadores) {
+      const socketId = socketsPorUsuario[j.userId];
+      if (socketId) {
+        io.to(socketId).emit("cartas_repartidas", manos[j.userId]);
+        console.log(`Cartas enviadas a ${j.username} (${j.userId}) -> socket ${socketId}:`, manos[j.userId]);
+      } else {
+        console.log(`⚠️ No hay socket registrado para userId ${j.userId} (${j.username})`);
+      }
+    }
+
+    // 7) responder al frontend (info general)
+    res.json({ ok: true, jugadores: jugadores.length, mensaje: "Partida iniciada y cartas enviadas por socket" });
+
+    // 6. Guardar solución en memoria
+    solucionesPorSala[joinCode] = solucion;
+
+    // 7. Respuesta al frontend
+    res.json({
+      ok: true,
+      jugadores: jugadores.length,
+      solucionCreada: true,
+      mensaje: "Partida iniciada y cartas repartidas"
+    });
+
+    console.log("Repartiendo cartas a jugador:", playerId, cartasJugador);
+    socket.to(playerSocketId).emit("cartas_repartidas", cartasJugador);
+
+  } catch (error) {
+    console.error("❌ Error al iniciar partida:", error);
+    res.status(500).json({ error: "Error al iniciar partida" });
+  }
+});
+
 
 
 app.get('/users', async function (req, res) {
@@ -605,98 +693,103 @@ app.post('/joinroom', async (req, res) => {
 
 //SOCKET
 
+const games = {}; // Guardamos partidas
+
 io.on("connection", (socket) => {
   const req = socket.request;
 
+  // --- Unirse a la sala ---
   socket.on("joinRoom", (data) => {
-    if (req.session.room != undefined && req.session.room.length > 0) {
-      socket.leave(req.session.room);
-    }
+    if (req.session?.room) socket.leave(req.session.room);
+
+    req.session = req.session || {};
     req.session.room = data.room;
     socket.join(req.session.room);
     socket.playerId = data.playerId;
     socket.joinCode = data.joinCode;
 
-    console.log("✅ Datos guardados:");
-    console.log("   - room:", req.session.room);
-    console.log("   - playerId:", socket.playerId);
-    console.log("   - joinCode:", socket.joinCode);
-    console.log("🚪 Usuario se unió a la sala:", req.session.room);
-    // Notificar a todos en la sala que un jugador se unió
-    io.to(req.session.room).emit("playerJoined", {
-      room: req.session.room,
-      timestamp: new Date()
+    // Guardar jugador en la partida
+    if (!games[req.session.room]) games[req.session.room] = { players: [], currentTurn: 0, started: false };
+    const game = games[req.session.room];
+    const existingPlayer = game.players.find(p => p.userId === data.playerId);
+    if (existingPlayer) existingPlayer.socketId = socket.id;
+    else game.players.push({
+      userId: data.playerId,
+      username: data.username || "Jugador",
+      socketId: socket.id,
+      position: null,
+      turnOrder: game.players.length
     });
+
+    io.to(req.session.room).emit("playerJoined", { room: req.session.room, timestamp: new Date() });
+    console.log(`✅ Jugador ${data.playerId} se unió a ${req.session.room}`);
   });
 
-  socket.on("startGame", ({ room }) => {
-    console.log("🎮 Iniciando juego en sala:", room);
-    io.to(room).emit("gameStarted", { room });
+  // --- Inicializar juego ---
+  socket.on("initializeGame", ({ joinCode }) => {
+    const game = games[joinCode];
+    if (!game) return;
+
+    // Ejemplo: asignar posiciones iniciales
+    const salidas = [
+      { x: 0, y: 7 }, { x: 5, y: 0 }, { x: 6, y: 15 }, { x: 11, y: 9 }
+    ];
+    game.players.forEach((p, i) => p.position = salidas[i % salidas.length]);
+
+    game.started = true;
+    io.to(joinCode).emit("gameInitialized", { players: game.players, currentTurn: game.currentTurn });
+    console.log(`🚀 Juego inicializado en sala ${joinCode}`);
   });
 
-  socket.on("sendMessage", (data) => {
-    io.to(req.session.room).emit("newMessage", {
-      room: req.session.room,
-      message: data,
-    });
-  });
+  // --- Repartir cartas ---
+  socket.on("repartirCartas", ({ joinCode }) => {
+    const game = games[joinCode];
+    if (!game) return;
 
-  socket.on("initializeGame", async (data) => {
-    const { joinCode } = data;
-
-    try {
-      const users = await realizarQuery(`
-            SELECT Users.userId, Users.username
-            FROM Users
-            INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
-            INNER JOIN GameRooms ON GameRooms.gameRoomId = UsersXRooms.gameRoomId
-            WHERE GameRooms.joinCode = ${joinCode}
-        `);
-
-      // Las 4 salidas (casillas con valor 2)
-      const salidas = [
-        { x: 0, y: 7 },
-        { x: 5, y: 0 },
-        { x: 6, y: 15 },
-        { x: 11, y: 9 }
+    const cartasPorJugador = {};
+    game.players.forEach(player => {
+      cartasPorJugador[player.userId] = [
+        { characterName: "Señorita Escarlata" },
+        { weaponName: "Revólver" },
+        { roomName: "Biblioteca" }
       ];
+    });
 
-      // Asignar cada jugador a una salida
-      const jugadores = users.map((user, index) => ({
-        userId: user.userId,
-        username: user.username,
-        position: salidas[index % salidas.length],
-        turnOrder: index
-      }));
-
-      io.to(joinCode).emit("gameInitialized", {
-        players: jugadores,
-        currentTurn: 0
-      });
-
-    } catch (error) {
-      console.error("Error:", error);
-    }
+    game.players.forEach(player => {
+      if (player.socketId) {
+        io.to(player.socketId).emit("cartas_repartidas", cartasPorJugador[player.userId]);
+        console.log(`🃏 Cartas enviadas a ${player.userId}:`, cartasPorJugador[player.userId]);
+      } else {
+        console.warn(`⚠️ No hay socketId para ${player.userId}`);
+      }
+    });
   });
 
-  socket.on("disconnect", async () => {
-    console.log("Disconnect");
-    console.log(socket.playerId, socket.joinCode)
+  // --- Movimiento de jugador ---
+  socket.on("movePlayer", ({ joinCode, userId, newPosition }) => {
+    const game = games[joinCode];
+    if (!game) return;
+    const player = game.players.find(p => p.userId === userId);
+    if (!player) return;
+    if (player.turnOrder !== game.currentTurn) return;
+
+    player.position = newPosition;
+    io.to(joinCode).emit("playerMoved", { playerId: userId, newPosition });
+  });
+
+  // --- Cambiar turno ---
+  socket.on("nextTurn", ({ joinCode }) => {
+    const game = games[joinCode];
+    if (!game) return;
+    game.currentTurn = (game.currentTurn + 1) % game.players.length;
+    io.to(joinCode).emit("turnChanged", { currentTurn: game.currentTurn });
+  });
+
+  // --- Desconexión ---
+  socket.on("disconnect", () => {
+    console.log("⛔ Usuario desconectado:", socket.playerId);
     if (socket.playerId && socket.joinCode) {
-      try {
-        /*await realizarQuery(`
-          DELETE UsersXRooms 
-          FROM UsersXRooms
-          INNER JOIN GameRooms ON GameRooms.gameRoomId = UsersXRooms.gameRoomId
-          WHERE UsersXRooms.userId = ${socket.playerId} AND GameRooms.joinCode = ${socket.joinCode}
-        `);*/
-        io.to(socket.joinCode).emit('playerLeft', {
-          playerId: socket.playerId
-        });
-        console.log("👋 ID del usuario que salió de la sala: ", socket.playerId)
-      } catch (error) {
-        console.error("Error al eliminar usuario al desconectar:", error);
-      }
+      io.to(socket.joinCode).emit("playerLeft", { playerId: socket.playerId });
     }
   });
 });
