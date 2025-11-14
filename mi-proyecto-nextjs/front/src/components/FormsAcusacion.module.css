@@ -1,0 +1,76 @@
+.modalBackground {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+}
+
+.modalContainer {
+    background: linear-gradient(145deg, #1a0000, #000000);
+    border: 3px solid #8B0000;
+    border-radius: 15px;
+    padding: 2rem;
+    width: 420px;
+    box-shadow: 0 0 40px rgba(139, 0, 0, 0.8);
+    animation: aparecer 0.3s ease-out;
+}
+
+@keyframes aparecer {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modalContainer h2 {
+    color: #dc143c;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    font-family: "Georgia", serif;
+    text-shadow: 2px 2px 4px black;
+}
+
+.btnsContainer {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.btnConfirmar {
+    background-color: #ae0000;
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    font-weight: 600;
+}
+
+.btnConfirmar:hover {
+    background-color: #c40000;
+    transform: scale(1.05);
+}
+
+.btnCancelar {
+    background-color: #333;
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    font-weight: 600;
+}
+
+.btnCancelar:hover {
+    background-color: #555;
+    transform: scale(1.05);
+}

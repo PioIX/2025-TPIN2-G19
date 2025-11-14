@@ -1,3 +1,54 @@
+/* TABLERO PAGE STYLES (pagina-tablero) */
+:root{
+  --clue-red: #8B0000;
+  --clue-dark: #111;
+}
+
 .pagina-tablero {
-    display: flex;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 18px;
+  background: radial-gradient(circle at 10% 10%, rgba(139,0,0,0.02), transparent 15%), linear-gradient(180deg, #0a0a0a, #070707);
+  min-height: 100vh;
+  font-family: "Georgia", serif;
+  color: var(--clue-white);
+  position: relative;
+}
+
+/* Info box (el que tenés con style inline): lo dejamos con clase para poder estilizar si querés */
+.infoPanel {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0,0,0,0.9);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 1000;
+  min-width: 220px;
+  border: 1px solid rgba(139,0,0,0.2);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+}
+
+/* botones fijos abajo (si querés transformarlos luego a <Button/>) */
+.fabGroup {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.fabGroup button {
+  padding: 12px 22px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
 }

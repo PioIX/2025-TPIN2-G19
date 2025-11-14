@@ -1,49 +1,57 @@
+/* USUARIOS - carta de sospechosos / jugadores */
+:root{ --red: #DC143C; --deep: #8B0000; --bg1: linear-gradient(145deg, #1a0000, #000000); }
+
 .divUsuariosPrincipal {
-    background: linear-gradient(145deg, #1a0000, #000000);
-    border: 3px solid #8B0000;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 8px 16px rgba(139, 0, 0, 0.4);
+  background: var(--bg1);
+  border: 3px solid var(--deep);
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 10px 30px rgba(139,0,0,0.35);
+  color: var(--clue-white);
+  font-family: "Georgia", serif;
+  max-width: 260px;
 }
 
 .divUsuariosPrincipal h2 {
-    color: #DC143C;
-    text-align: center;
-    font-family: 'Georgia', serif;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  color: var(--red);
+  text-align: center;
+  font-family: 'Georgia', serif;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  margin-bottom: 12px;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
+  font-size: 1rem;
 }
 
 .divUsuarios {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 12px;
-    margin: 10px 0;
-    background: rgba(20, 0, 0, 0.6);
-    border-left: 4px solid #DC143C;
-    border-radius: 5px;
-    transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  margin: 8px 0;
+  background: rgba(20,0,0,0.5);
+  border-left: 4px solid var(--red);
+  border-radius: 6px;
+  transition: transform 0.22s ease, background 0.22s ease;
 }
 
 .divUsuarios:hover {
-    background: rgba(139, 0, 0, 0.3);
-    transform: translateX(5px);
+  background: rgba(139,0,0,0.25);
+  transform: translateX(6px);
 }
 
 .divUsuarios img {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    border: 2px solid #8B0000;
-    object-fit: cover;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--deep);
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 
 .divUsuarios p {
-    color: #fff;
-    font-family: 'Georgia', serif;
-    font-size: 16px;
-    margin: 0;
+  color: var(--clue-white);
+  font-family: 'Georgia', serif;
+  font-size: 0.95rem;
+  margin: 0;
 }
