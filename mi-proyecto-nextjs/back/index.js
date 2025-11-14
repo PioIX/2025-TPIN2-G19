@@ -40,6 +40,8 @@ const sessionMiddleware = session({
   saveUninitialized: false,
 });
 
+app.use(sessionMiddleware)
+
 //PROYECTO
 app.post('/createCode', async (req, res) => {
   const { name, players, admin } = req.body;
