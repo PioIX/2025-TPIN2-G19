@@ -47,6 +47,7 @@ export default function Tablero() {
     useEffect(() => {
         if (!socket || !isConnected || !joinCode) return
         socket.emit("initializeGame", { joinCode })
+        console.log("🎮 Juego inicializado")
     }, [socket, isConnected, joinCode])
 
     // Actualizar jugadores y turno al inicializar juego
@@ -65,7 +66,7 @@ export default function Tablero() {
     // Actualizar posición de jugador movido
     useEffect(() => {
         if (!playerMoved) return
-        setJugadores(prev => prev.map(j => 
+        setJugadores(prev => prev.map(j =>
             j.userId === playerMoved.playerId ? { ...j, position: playerMoved.newPosition } : j
         ))
     }, [playerMoved])
@@ -144,20 +145,38 @@ export default function Tablero() {
 
     // Repartir cartas
     const repartirCartas = async () => {
-        if (!joinCode || !userId) return
+        if (!joinCode || !userId) {
+            console.error("❌ Faltan joinCode o userId");
+            return;
+        }
+
         try {
+            console.log("Enviando datos:", { joinCode, cardsCharacters, cardsWeapons, cardsRooms });
             const res = await fetch("http://localhost:4000/iniciarPartida", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ joinCode, userId, cardsCharacters, cardsWeapons, cardsRooms })
-            })
-            const data = await res.json()
-            if (data.cartasJugador) setMisCartas(data.cartasJugador)
-            console.log("🎴 Mis cartas:", data.cartasJugador)
+                body: JSON.stringify({
+                    joinCode,
+                    cardsCharacters,
+                    cardsWeapons,
+                    cardsRooms
+                })
+            });
+
+            const data = await res.json();
+
+            if (!data.ok) {
+                console.error("❌ Error en respuesta:", data);
+                return;
+            }
+
+            console.log("✅ Cartas repartidas correctamente");
+            // Las cartas llegarán por socket automáticamente
+
         } catch (err) {
-            console.error("❌ Error al repartir cartas:", err)
+            console.error("❌ Error al repartir cartas:", err);
         }
-    }
+    };
 
     const abrirModalAcusacion = () => setModalAcusacionAbierto(true)
     const cerrarModalAcusacion = () => setModalAcusacionAbierto(false)
