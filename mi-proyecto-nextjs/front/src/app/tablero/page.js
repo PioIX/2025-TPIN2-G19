@@ -26,10 +26,10 @@ export default function Tablero() {
     const [modalAcusacion, setModalAcusacionAbierto] = useState(false)
     const [seUnio, setSeUnio] = useState(false)
 
-
     useEffect(() => {
         const joinCode = sessionStorage.getItem("joinCode")
         const userId = sessionStorage.getItem("userId")
+        const playerId = sessionStorage.getItem("playerId")
 
         setJoinCode(joinCode)
         setUserId(userId)
@@ -38,12 +38,10 @@ export default function Tablero() {
         console.log(userId)
     }, [])
 
-
-    // ✅ SOLUCIÓN: Agregar joinCode y userId a las dependencias
     useEffect(() => {
         console.log("entro al useEffect de socket")
         if (!socket || !isConnected) return
-        if(seUnio==true) return
+        if (seUnio == true) return
 
         if (!joinCode || !userId) {
             console.log("Esperando joinCode y userId...")
@@ -54,93 +52,17 @@ export default function Tablero() {
         console.log("se unio el jugador", userId, "en el room ", joinCode)
         setSeUnio(true)
 
-        const handlePlayerJoined = (data) => {
-            console.log("Nuevo jugador se unió:", data) //notifica que se unio un usuario
-        }
-
-        socket.on("playerJoined", handlePlayerJoined)
-
-        return () => {
-            socket.off("playerJoined", handlePlayerJoined)
-        }
-
+        return () => { }
     }, [socket, isConnected, joinCode, userId])
-
-
-    useEffect(() => {
-        if (!joinCode) return
-
-        const fetchJugadores = async () => {
-            try {
-                const res = await fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
-                const data = await res.json()
-                setJugadores(data || [])
-                console.log("📋 Jugadores obtenidos:", data)
-            } catch (error) {
-                console.error('❌ Error fetching jugadores:', error)
-            }
-        }
-
-        fetchJugadores()
-    }, [joinCode])
 
     useEffect(() => {
         if (!socket || !isConnected || !joinCode || !userId) return
 
         console.log("JUGADORES EN LA SALA: ", jugadores)
-        // Inicializar el juego
+
         socket.emit("initializeGame", { joinCode })
 
-        // ===== LISTENERS DEL SOCKET =====
-
-        // Cuando el juego se inicializa
-        const handleInitializeGame = (data) => {
-            console.log("Juego inicializado:", data)
-            setJugadores(data.jugadores)
-            console.log("Jugadores:")
-            setTurnoActual(data.currentTurn)
-
-            // Encontrar mi índice
-            const miIdx = data.jugadores.findIndex(p => p.userId == userId)
-            setMiIndice(miIdx)
-        }
-
-        // Cuando alguien tira el dado
-        const handleDiceRolled = (data) => {
-            console.log("Dado tirado:", data)
-            setNumeroObtenido(data.result)
-        }
-
-        // Cuando un jugador se mueve
-        const handlePlayerMoved = (data) => {
-            console.log("Jugador movido:", data)
-            setJugadores(prev =>
-                prev.map(p =>
-                    p.userid === data.playerId
-                        ? { ...p, position: data.newPosition }
-                        : p
-                )
-            )
-        }
-
-        // Cuando cambia el turno
-        const handleTurnChanged = (data) => {
-            console.log("Turno cambiado:", data)
-            setTurnoActual(data.currentTurn)
-            setNumeroObtenido(0) // Resetear el dado
-        }
-
-        socket.on("initializeGame", handleInitializeGame)
-        socket.on("diceRolled", handleDiceRolled)
-        socket.on("playerMoved", handlePlayerMoved)
-        socket.on("turnChanged", handleTurnChanged)
-
-        return () => {
-            socket.off("initializeGame", handleInitializeGame)
-            socket.off("diceRolled", handleDiceRolled)
-            socket.off("playerMoved", handlePlayerMoved)
-            socket.off("turnChanged", handleTurnChanged)
-        }
+        return () => { }
     }, [socket, isConnected, joinCode, userId])
 
     const moverJugador = (nuevaPosicion) => {
@@ -153,7 +75,6 @@ export default function Tablero() {
             newPosition: nuevaPosicion
         })
     }
-
 
     function getRandomIntInclusive(min, max) {
         min = Math.ceil(min)
@@ -175,7 +96,6 @@ export default function Tablero() {
         const cartasDisponiblesCharacters = cardsCharacters.slice();
         const cartasDisponiblesWeapons = cardsWeapons.slice();
         const cartasDisponiblesRooms = cardsRooms.slice();
-
 
         for (let i = cartasDisponiblesCharacters.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -210,7 +130,6 @@ export default function Tablero() {
         setModalAcusacionAbierto(false)
     }
 
-
     const categorieSospechosos = ["Coronel Mostaza", "pepip", "asdasd"];
     const categoriesArmas = ["Coronel Mostaza", "pepip", "asdasd"];
     const categorieSHabitaciones = ["Coronel Mostaza", "pepip", "asdasd"];
@@ -235,5 +154,3 @@ export default function Tablero() {
         </>
     )
 }
-
-/*¡Tranqui! 😅 El problema es que todavía estás emitiendo initializeGame automáticamente en el tercer useEffect (línea 100). Eso hace que se ejecute múltiples veces.✅ SOLUCIÓN - Quitar el emit automático y hacerlo manual: */

@@ -2,7 +2,7 @@ var express = require('express'); //Tipo de servidor: Express
 var bodyParser = require('body-parser'); //Convierte los JSON
 var cors = require('cors');
 const { realizarQuery } = require('./modulos/mysql');
-const session = require("express-session"); 
+const session = require("express-session");
 
 var app = express(); //Inicializo express
 var port = process.env.PORT || 4000; //Ejecuto el servidor en el puerto 3000
@@ -13,23 +13,23 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.get('/', function (req, res) {
-    res.status(200).send({
-        message: 'GET Home route working fine!'
-    });
+  res.status(200).send({
+    message: 'GET Home route working fine!'
+  });
 });
 
 
 //Pongo el servidor a escuchar
 const server = app.listen(port, () => {
-console.log(`Servidor NodeJS corriendo en http://localhost:${port}/`);
+  console.log(`Servidor NodeJS corriendo en http://localhost:${port}/`);
 });
 
 const io = require("socket.io")(server, {
-cors: {
-origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"], // Permitir el origen localhost:3000
-methods: ["GET", "POST", "PUT", "DELETE"], // Métodos permitidos
-credentials: true, // Habilitar el envío de cookies
-},
+  cors: {
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"], // Permitir el origen localhost:3000
+    methods: ["GET", "POST", "PUT", "DELETE"], // Métodos permitidos
+    credentials: true, // Habilitar el envío de cookies
+  },
 });
 
 const sessionMiddleware = session({
@@ -56,12 +56,12 @@ app.post('/createCode', async (req, res) => {
     // Generar código único de 4 dígitos
     let joinCode = Math.floor(1000 + Math.random() * 9000).toString();
     console.log('🎲 Código generado:', joinCode);
-    
+
     // Verificar que el código no exista ya
     let existingRoom = await realizarQuery(`
       SELECT * FROM GameRooms WHERE joinCode = '${joinCode}'
     `);
-    
+
     // Si existe, generar otro código (máximo 10 intentos)
     let attempts = 0;
     while (existingRoom.length > 0 && attempts < 10) {
@@ -104,7 +104,7 @@ app.post('/createCode', async (req, res) => {
     const verificacion = await realizarQuery(`
       SELECT * FROM GameRooms WHERE gameRoomId = ${roomId}
     `);
-    
+
     console.log('🔍 Verificación de sala creada:', verificacion[0]);
 
     if (!verificacion[0].joinCode) {
@@ -113,10 +113,10 @@ app.post('/createCode', async (req, res) => {
     }
 
     // Devolver respuesta
-    res.json({ 
-      roomId, 
+    res.json({
+      roomId,
       joinCode: verificacion[0].joinCode, // Usar el joinCode de la verificación
-      mensaje: "Sala creada con éxito" 
+      mensaje: "Sala creada con éxito"
     });
 
   } catch (error) {
@@ -130,17 +130,17 @@ app.post('/createCode', async (req, res) => {
 // Agregar este endpoint nuevo
 app.get('/room', async (req, res) => {
   const { joinCode } = req.query;
-  
+
   try {
     const room = await realizarQuery(`
       SELECT * FROM GameRooms WHERE joinCode = ${joinCode}
     `);
     console.log("ROOM ENDPOINT: ", room);
-    
+
     if (room.length === 0) {
       return res.status(404).json({ error: "Sala no encontrada" });
     }
-    
+
     res.json(room[0]);
   } catch (error) {
     console.error("Error al obtener sala:", error);
@@ -149,38 +149,38 @@ app.get('/room', async (req, res) => {
 });
 
 // Modificar el endpoint usersInRoom para devolver más datos
-app.get('/usersInRoom', async function(req,res){
+app.get('/usersInRoom', async function (req, res) {
   const { joinCode } = req.query;
-    try {
-        const response = await realizarQuery(`
+  try {
+    const response = await realizarQuery(`
             SELECT Users.userId, Users.username, Users.photo
             FROM Users
             INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
             INNER JOIN GameRooms on GameRooms.gameRoomId= UsersXRooms.gameRoomId
             WHERE GameRooms.joinCode = '${joinCode}';   
         `)
-        console.log("Usuarios dentro de la sala: ", response)
-        res.send(response)
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ error: "Error al obtener usuarios" })
-    }
+    console.log("Usuarios dentro de la sala: ", response)
+    res.send(response)
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: "Error al obtener usuarios" })
+  }
 })
 
-app.get('/photoUsersInRoom', async function(req,res){
+app.get('/photoUsersInRoom', async function (req, res) {
   const { joinCode } = req.query;
-    try {
-        console.log("Entre1")
-        const response = await realizarQuery(`
+  try {
+    console.log("Entre1")
+    const response = await realizarQuery(`
             SELECT Users.photo
             FROM Users
             INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId WHERE UsersXRooms.gameRoomId = ${joinCode}    
         `)
-        res.send(response)
-        
-    } catch (error) {
-        console.log(error)
-    }
+    res.send(response)
+
+  } catch (error) {
+    console.log(error)
+  }
 })
 
 // Endpoint para obtener usuario por ID
@@ -188,27 +188,27 @@ app.get('/user/:id', async (req, res) => {
   try {
     const userId = req.params.id
     console.log('🔍 GET /user/:id - Buscando usuario ID:', userId)
-    
+
     const results = await realizarQuery(`
       SELECT userId, username, email, photo, wins, admin 
       FROM Users 
       WHERE userId = ${userId}
     `)
-    
+
     if (results.length === 0) {
       console.log('❌ Usuario no encontrado')
       return res.status(404).json({ error: 'Usuario no encontrado' })
     }
-    
+
     const user = results[0]
     console.log('✅ Usuario encontrado:', user)
     console.log('📊 Campo admin:', user.admin, '| Tipo:', typeof user.admin)
-    
+
     // Asegurar que admin sea un número
     user.admin = Number(user.admin)
-    
+
     res.json(user)
-    
+
   } catch (error) {
     console.error('💥 Error al obtener usuario:', error)
     res.status(500).json({ error: 'Error del servidor' })
@@ -224,12 +224,12 @@ app.get('/user/:id', async (req, res) => {
 app.get('/weapons', async (req, res) => {
   try {
     console.log('📋 GET /weapons - Obteniendo todas las armas')
-    
+
     const results = await realizarQuery(`SELECT * FROM Weapons ORDER BY name`)
-    
+
     console.log(`✅ ${results.length} armas encontradas`)
     res.json(results)
-    
+
   } catch (error) {
     console.error('💥 Error al obtener armas:', error)
     res.status(500).json({ error: 'Error al obtener armas' })
@@ -241,7 +241,7 @@ app.post('/weapons', async (req, res) => {
   try {
     const { name } = req.body
     console.log('➕ POST /weapons - Agregando arma:', name)
-    
+
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'El nombre del arma es requerido' })
     }
@@ -253,10 +253,10 @@ app.post('/weapons', async (req, res) => {
     }
 
     const result = await realizarQuery(`INSERT INTO Weapons (name) VALUES ('${name.trim()}')`)
-    
+
     console.log('✅ Arma agregada con ID:', result.insertId)
     res.json({ message: 'Arma agregada con éxito', weaponId: result.insertId })
-    
+
   } catch (error) {
     console.error('💥 Error al agregar arma:', error)
     res.status(500).json({ error: 'Error al agregar arma' })
@@ -268,16 +268,16 @@ app.delete('/weapons/:id', async (req, res) => {
   try {
     const weaponId = req.params.id
     console.log('🗑️ DELETE /weapons/:id - Eliminando arma ID:', weaponId)
-    
+
     const result = await realizarQuery(`DELETE FROM Weapons WHERE weaponId = ${weaponId}`)
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Arma no encontrada' })
     }
-    
+
     console.log('✅ Arma eliminada')
     res.json({ message: 'Arma eliminada con éxito' })
-    
+
   } catch (error) {
     console.error('💥 Error al eliminar arma:', error)
     res.status(500).json({ error: 'Error al eliminar arma' })
@@ -290,12 +290,12 @@ app.delete('/weapons/:id', async (req, res) => {
 app.get('/characters', async (req, res) => {
   try {
     console.log('📋 GET /characters - Obteniendo todos los personajes')
-    
+
     const results = await realizarQuery(`SELECT * FROM Characters ORDER BY name`)
-    
+
     console.log(`✅ ${results.length} personajes encontrados`)
     res.json(results)
-    
+
   } catch (error) {
     console.error('💥 Error al obtener personajes:', error)
     res.status(500).json({ error: 'Error al obtener personajes' })
@@ -307,7 +307,7 @@ app.post('/characters', async (req, res) => {
   try {
     const { name } = req.body
     console.log('➕ POST /characters - Agregando personaje:', name)
-    
+
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'El nombre del personaje es requerido' })
     }
@@ -319,10 +319,10 @@ app.post('/characters', async (req, res) => {
     }
 
     const result = await realizarQuery(`INSERT INTO Characters (name) VALUES ('${name.trim()}')`)
-    
+
     console.log('✅ Personaje agregado con ID:', result.insertId)
     res.json({ message: 'Personaje agregado con éxito', characterId: result.insertId })
-    
+
   } catch (error) {
     console.error('💥 Error al agregar personaje:', error)
     res.status(500).json({ error: 'Error al agregar personaje' })
@@ -334,16 +334,16 @@ app.delete('/characters/:id', async (req, res) => {
   try {
     const characterId = req.params.id
     console.log('🗑️ DELETE /characters/:id - Eliminando personaje ID:', characterId)
-    
+
     const result = await realizarQuery(`DELETE FROM Characters WHERE characterId = ${characterId}`)
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Personaje no encontrado' })
     }
-    
+
     console.log('✅ Personaje eliminado')
     res.json({ message: 'Personaje eliminado con éxito' })
-    
+
   } catch (error) {
     console.error('💥 Error al eliminar personaje:', error)
     res.status(500).json({ error: 'Error al eliminar personaje' })
@@ -351,21 +351,21 @@ app.delete('/characters/:id', async (req, res) => {
 })
 
 
-app.get('/users', async function(req,res){
-    try {
-        console.log("Entre")
-        const response = await realizarQuery(`
+app.get('/users', async function (req, res) {
+  try {
+    console.log("Entre")
+    const response = await realizarQuery(`
             SELECT * FROM Users    
         `)
-        res.send(response)
-        
-    } catch (error) {
-        console.log(error)
-    }
+    res.send(response)
+
+  } catch (error) {
+    console.log(error)
+  }
 })
 
 
-app.delete('/deleteUsersInRoom', async function (req,res) {
+app.delete('/deleteUsersInRoom', async function (req, res) {
   try {
     const response = await realizarQuery(`
       DELETE FROM UsersXRooms WHERE userId = ${req.body.userId}  
@@ -454,7 +454,7 @@ app.post('/realizarAcusacion', async (req, res) => {
     const roomResponse = await realizarQuery(`
       SELECT * FROM GameRooms WHERE gameRoomId = ${roomId}
     `);
-    
+
     if (roomResponse.length === 0) {
       return res.status(404).send("Sala no encontrada");
     }
@@ -477,7 +477,7 @@ app.post('/realizarAcusacion', async (req, res) => {
 
 app.post('/register', async (req, res) => {
   const { username, email, password, photo, wins, admin } = req.body;
-  
+
   try {
     // Verificar si ya existe un usuario con el mismo email
     const existingUser = await realizarQuery(`
@@ -550,7 +550,7 @@ app.post('/createroom', async (req, res) => {
     INSERT INTO UsersXRooms (userId, gameRoomId)
     VALUES (${admin}, ${roomId})
     `);
-      console.log(roomId)
+    console.log(roomId)
     res.send({ roomId: roomId });
   } catch (error) {
     console.error("Error al crear la sala:", error);
@@ -606,97 +606,97 @@ app.post('/joinroom', async (req, res) => {
 //SOCKET
 
 io.on("connection", (socket) => {
-    const req = socket.request;
-    
-    socket.on("joinRoom", (data) => {
-        if (req.session.room != undefined && req.session.room.length > 0) {
-            socket.leave(req.session.room);
-        }
-        req.session.room = data.room;
-        socket.join(req.session.room);
-        socket.playerId = data.playerId;
-        socket.joinCode = data.joinCode;
-        
-        console.log("✅ Datos guardados:");
-        console.log("   - room:", req.session.room);
-        console.log("   - playerId:", socket.playerId);
-        console.log("   - joinCode:", socket.joinCode);
-        console.log("🚪 Usuario se unió a la sala:", req.session.room);
-        // Notificar a todos en la sala que un jugador se unió
-        io.to(req.session.room).emit("playerJoined", {
-            room: req.session.room,
-            timestamp: new Date()
-        });
-    });
+  const req = socket.request;
 
-    socket.on("startGame", (data) => {
-        console.log("🎮 Iniciando juego en sala:", data.room);
-        io.to(data.room).emit("gameStarted", { room: data.room });
-    });
+  socket.on("joinRoom", (data) => {
+    if (req.session.room != undefined && req.session.room.length > 0) {
+      socket.leave(req.session.room);
+    }
+    req.session.room = data.room;
+    socket.join(req.session.room);
+    socket.playerId = data.playerId;
+    socket.joinCode = data.joinCode;
 
-    socket.on("sendMessage", (data) => {
-        io.to(req.session.room).emit("newMessage", {
-            room: req.session.room,
-            message: data,
-        });
+    console.log("✅ Datos guardados:");
+    console.log("   - room:", req.session.room);
+    console.log("   - playerId:", socket.playerId);
+    console.log("   - joinCode:", socket.joinCode);
+    console.log("🚪 Usuario se unió a la sala:", req.session.room);
+    // Notificar a todos en la sala que un jugador se unió
+    io.to(req.session.room).emit("playerJoined", {
+      room: req.session.room,
+      timestamp: new Date()
     });
+  });
 
-    socket.on("initializeGame", async (data) => {
+  socket.on("startGame", ({ room }) => {
+    console.log("🎮 Iniciando juego en sala:", room);
+    io.to(room).emit("gameStarted", { room });
+  });
+
+  socket.on("sendMessage", (data) => {
+    io.to(req.session.room).emit("newMessage", {
+      room: req.session.room,
+      message: data,
+    });
+  });
+
+  socket.on("initializeGame", async (data) => {
     const { joinCode } = data;
-    
+
     try {
-        const users = await realizarQuery(`
+      const users = await realizarQuery(`
             SELECT Users.userId, Users.username
             FROM Users
             INNER JOIN UsersXRooms ON Users.userId = UsersXRooms.userId
             INNER JOIN GameRooms ON GameRooms.gameRoomId = UsersXRooms.gameRoomId
             WHERE GameRooms.joinCode = ${joinCode}
         `);
-        
-        // Las 4 salidas (casillas con valor 2)
-        const salidas = [
-            { x: 0, y: 7 },
-            { x: 5, y: 0 },
-            { x: 6, y: 15 },
-            { x: 11, y: 9 }
-        ];
-        
-        // Asignar cada jugador a una salida
-        const jugadores = users.map((user, index) => ({
-            userId: user.userId,
-            username: user.username,
-            position: salidas[index % salidas.length],
-            turnOrder: index
-        }));
-        
-        io.to(joinCode).emit("gameInitialized", {
-            players: jugadores,
-            currentTurn: 0
-        });
-        
-        } catch (error) {
-            console.error("Error:", error);
-        }
-    });
 
-    socket.on("disconnect", async () => {
-        console.log("Disconnect");
-        console.log(socket.playerId, socket.joinCode)
-        if (socket.playerId && socket.joinCode) {
-          try {
-            await realizarQuery(`
-              DELETE UsersXRooms 
-              FROM UsersXRooms
-              INNER JOIN GameRooms ON GameRooms.gameRoomId = UsersXRooms.gameRoomId
-              WHERE UsersXRooms.userId = ${socket.playerId} AND GameRooms.joinCode = ${socket.joinCode}
-            `);
-            io.to(socket.joinCode).emit('playerLeft', { 
-              playerId: socket.playerId
-            });
-            console.log("👋 ID del usuario que salió de la sala: ", socket.playerId)
-          } catch (error) {
-            console.error("Error al eliminar usuario al desconectar:", error);
-          }
-        }
-    });
+      // Las 4 salidas (casillas con valor 2)
+      const salidas = [
+        { x: 0, y: 7 },
+        { x: 5, y: 0 },
+        { x: 6, y: 15 },
+        { x: 11, y: 9 }
+      ];
+
+      // Asignar cada jugador a una salida
+      const jugadores = users.map((user, index) => ({
+        userId: user.userId,
+        username: user.username,
+        position: salidas[index % salidas.length],
+        turnOrder: index
+      }));
+
+      io.to(joinCode).emit("gameInitialized", {
+        players: jugadores,
+        currentTurn: 0
+      });
+
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  });
+
+  socket.on("disconnect", async () => {
+    console.log("Disconnect");
+    console.log(socket.playerId, socket.joinCode)
+    if (socket.playerId && socket.joinCode) {
+      try {
+        /*await realizarQuery(`
+          DELETE UsersXRooms 
+          FROM UsersXRooms
+          INNER JOIN GameRooms ON GameRooms.gameRoomId = UsersXRooms.gameRoomId
+          WHERE UsersXRooms.userId = ${socket.playerId} AND GameRooms.joinCode = ${socket.joinCode}
+        `);*/
+        io.to(socket.joinCode).emit('playerLeft', {
+          playerId: socket.playerId
+        });
+        console.log("👋 ID del usuario que salió de la sala: ", socket.playerId)
+      } catch (error) {
+        console.error("Error al eliminar usuario al desconectar:", error);
+      }
+    }
+  });
 });
