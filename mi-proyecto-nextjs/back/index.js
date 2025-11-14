@@ -733,6 +733,18 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("gameStarted", ({ room }) => {
+    const game = games[room];
+    if (!game) return;
+
+    game.started = true;
+
+    // Avisar a todos los jugadores que el juego empezó
+    io.to(room).emit("gameStarted", { message: "El juego comenzó" });
+
+    console.log(`🎮 Juego iniciado en sala ${room}`);
+  });
+
   // --- Inicializar juego ---
   socket.on("initializeGame", ({ joinCode }) => {
     const game = games[joinCode];

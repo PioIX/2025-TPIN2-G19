@@ -22,6 +22,7 @@ export default function Tablero() {
     const [modalAcusacion, setModalAcusacionAbierto] = useState(false)
     const [seUnio, setSeUnio] = useState(false)
     const [misCartas, setMisCartas] = useState([])
+    const [showModal, setShowModal] = useState(false);
     const router = useRouter()
 
     const { socket, isConnected, gameInitialized, diceRolled, playerMoved, turnChanged, cartasRepartidas } = useSocket()
@@ -78,14 +79,14 @@ export default function Tablero() {
     // Actualizar turno
     useEffect(() => {
         if (!turnChanged) return
-        
+
         console.log("========================================");
         console.log("⏭️ EVENTO turnChanged RECIBIDO:");
         console.log("   - Turno anterior:", turnoActual);
         console.log("   - Turno nuevo:", turnChanged.currentTurn);
         console.log("   - Datos completos:", turnChanged);
         console.log("========================================");
-        
+
         setTurnoActual(turnChanged.currentTurn)
         setNumeroObtenido(0) // Reiniciar dado
     }, [turnChanged])
@@ -125,7 +126,7 @@ export default function Tablero() {
     // Función para mover jugador
     const moverJugador = (nuevaPosicion) => {
         if (!socket || !joinCode || !userId) return
-        
+
         const miTurno = jugadores.find(j => j.turnOrder === turnoActual)?.userId === userId
         if (!miTurno) {
             alert("⚠️ No es tu turno")
@@ -154,6 +155,7 @@ export default function Tablero() {
 
         const diceValue = Math.floor(Math.random() * 6) + 1
         console.log("🎲 Tirando dado:", diceValue)
+        setShowModal(true)
         socket.emit("rollDice", { joinCode, playerId: userId, diceValue })
     }
 
@@ -244,30 +246,30 @@ export default function Tablero() {
 
             {/* Botones */}
             <div className={styles["botones-container"]}>
-                <button 
-                    onClick={obtenerNumeroAleatorio} 
+                <button
+                    onClick={obtenerNumeroAleatorio}
                     disabled={!esMiTurno || numeroObtenido > 0}
                     className={`${styles["btn-base"]} ${styles["btn-dado"]}`}
                 >
                     🎲 Tirar dado
                 </button>
 
-                <button 
-                    onClick={pasarTurno} 
+                <button
+                    onClick={pasarTurno}
                     disabled={!esMiTurno}
                     className={`${styles["btn-base"]} ${styles["btn-turno"]}`}
                 >
                     ⏭️ Pasar turno
                 </button>
 
-                <button 
+                <button
                     onClick={repartirCartas}
                     className={`${styles["btn-base"]} ${styles["btn-cartas"]}`}
                 >
                     🎴 Repartir cartas
                 </button>
 
-                <button 
+                <button
                     onClick={abrirModalAcusacion}
                     className={`${styles["btn-base"]} ${styles["btn-acusacion"]}`}
                 >
@@ -276,7 +278,7 @@ export default function Tablero() {
             </div>
 
             {/* Indicador de dado flotante */}
-            {numeroObtenido > 0 && esMiTurno && (
+            {numeroObtenido > 0 && esMiTurno && showModal ? (
                 <div style={{
                     position: 'fixed',
                     top: '50%',
@@ -298,8 +300,12 @@ export default function Tablero() {
                     <div style={{ fontSize: '18px', marginTop: '15px', color: '#4CAF50' }}>
                         ¡Selecciona dónde moverte!
                     </div>
+                    <br />
+                    <Button onClick={() => {
+                        setShowModal(false)
+                    }} />
                 </div>
-            )}
+            ): <div></div>}
 
             {modalAcusacion && (
                 <div className={styles["modal-overlay"]} onClick={cerrarModalAcusacion}>

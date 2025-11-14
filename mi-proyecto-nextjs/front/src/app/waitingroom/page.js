@@ -132,7 +132,7 @@ export default function WaitingRoom() {
     // ✅ SOLO emitir el evento, NO hacer router.push aquí
     // El redirect lo hará el listener de gameStarted (arriba)
     console.log("🎮 Admin emitiendo startGame para sala:", joinCode)
-    socket.emit("startGame", { room: joinCode })
+    socket.emit("gameStarted", { room: joinCode })
   }
 
   const handleLeaveRoom = async () => {
