@@ -43,7 +43,7 @@ export default function Tablero() {
     useEffect(() => {
         console.log("entro al useEffect de socket")
         if (!socket || !isConnected) return
-        if(seUnio==true) return
+        if (seUnio == true) return
 
         if (!joinCode || !userId) {
             console.log("Esperando joinCode y userId...")
@@ -203,11 +203,19 @@ export default function Tablero() {
 
     const abrirModalAcusacion = () => {
         setModalAcusacionAbierto(true)
-        return modalAcusacion
     }
 
     const cerrarModalAcusacion = () => {
         setModalAcusacionAbierto(false)
+    }
+
+    const manejarAcusacion = (datos) => {
+        console.log("Acusación realizada:", datos);
+        socket.emit("makeAccusation", {
+            joinCode,
+            userId,
+            acusacion: datos
+        });
     }
 
 
@@ -229,11 +237,14 @@ export default function Tablero() {
                 <button onClick={obtenerNumeroAleatorio}>numero aleatorio</button>
                 <button onClick={repartirCartas}>repartir cartas</button>
                 <button onClick={abrirModalAcusacion}>Hacer Acusación</button>
-                <FormsAcusacion />
+                <FormsAcusacion
+                    isOpen={modalAcusacion}
+                    onClose={cerrarModalAcusacion}
+                    onSubmit={manejarAcusacion}
+                />
                 <Usuarios></Usuarios>
             </div>
         </>
     )
 }
 
-/*¡Tranqui! 😅 El problema es que todavía estás emitiendo initializeGame automáticamente en el tercer useEffect (línea 100). Eso hace que se ejecute múltiples veces.✅ SOLUCIÓN - Quitar el emit automático y hacerlo manual: */
