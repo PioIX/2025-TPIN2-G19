@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
@@ -21,24 +22,48 @@ export function useSocket() {
 
     setSocket(socketInstance);
 
-    socketInstance.on("connect", () => console.log("🔌 Socket conectado:", socketInstance.id) || setIsConnected(true));
-    socketInstance.on("disconnect", () => setIsConnected(false));
+    socketInstance.on("connect", () => {
+      console.log("🔌 Socket conectado:", socketInstance.id);
+      setIsConnected(true);
+    });
+
+    socketInstance.on("disconnect", () => {
+      console.log("❌ Socket desconectado");
+      setIsConnected(false);
+    });
 
     socketInstance.on("playerJoined", setPlayerJoined);
     socketInstance.on("playerLeft", setPlayerLeft);
-    socketInstance.on("initializeGame", setGameInitialized);
-    socketInstance.on("diceRolled", setDiceRolled);
-    socketInstance.on("playerMoved", setPlayerMoved);
-    socketInstance.on("turnChanged", setTurnChanged);
-    socketInstance.on("cartas_repartidas", (cartas) => {
-      console.log("🃏 Cartas recibidas por socket:", cartas);
-      setCartasRepartidas(cartas);
-    });
-     socketInstance.on("gameStarted", () => {
-      console.log("🎮 Evento gameStarted recibido");
-      setGameInitialized(true); // esto indica que todos deben ir al tablero
+    
+    // ✅ IMPORTANTE: El evento correcto es "gameInitialized" (desde el servidor)
+    socketInstance.on("gameInitialized", (data) => {
+      console.log("🎮 Juego inicializado recibido:", data);
+      setGameInitialized(data);
     });
 
+    socketInstance.on("diceRolled", (data) => {
+      console.log("🎲 Dado tirado:", data);
+      setDiceRolled(data);
+    });
+
+    socketInstance.on("playerMoved", (data) => {
+      console.log("🚶 Jugador movido:", data);
+      setPlayerMoved(data);
+    });
+
+    socketInstance.on("turnChanged", (data) => {
+      console.log("⏭️ Turno cambiado recibido:", data);
+      setTurnChanged(data);
+    });
+
+    socketInstance.on("cartas_repartidas", (cartas) => {
+      console.log("🃏 Cartas recibidas:", cartas);
+      setCartasRepartidas(cartas);
+    });
+
+    socketInstance.on("gameStarted", () => {
+      console.log("🎮 Evento gameStarted recibido");
+    });
 
     return () => socketInstance.disconnect();
   }, []);
@@ -55,4 +80,3 @@ export function useSocket() {
     cartasRepartidas
   };
 }
-

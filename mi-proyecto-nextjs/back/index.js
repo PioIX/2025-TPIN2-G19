@@ -27,7 +27,7 @@ const server = app.listen(port, () => {
 
 const io = require("socket.io")(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"], // Permitir el origen localhost:3000
+    origin: "*", // Permitir el origen localhost:3000
     methods: ["GET", "POST", "PUT", "DELETE"], // Métodos permitidos
     credentials: true, // Habilitar el envío de cookies
   },
@@ -685,10 +685,11 @@ app.post('/joinroom', async (req, res) => {
 });
 
 
-//SOCKET
+//SOCKET 
 
 io.on("connection", (socket) => {
   const req = socket.request;
+  console.log("🔌 Nuevo socket conectado:", socket.id);
 
   // --- Unirse a la sala ---
   socket.on("joinRoom", (data) => {
@@ -700,14 +701,18 @@ io.on("connection", (socket) => {
     socket.playerId = data.playerId;
     socket.joinCode = data.joinCode;
 
-    // ✅ USAR joinCode como clave (no req.session.room)
     const roomKey = data.joinCode;
 
-    if (!games[roomKey]) games[roomKey] = { players: [], currentTurn: 0, started: false };
+    if (!games[roomKey]) {
+      games[roomKey] = { players: [], currentTurn: 0, started: false };
+    }
+    
     const game = games[roomKey];
     const existingPlayer = game.players.find(p => p.userId === data.playerId);
+    
     if (existingPlayer) {
       existingPlayer.socketId = socket.id;
+      console.log(`♻️ Jugador ${data.playerId} reconectado con socket ${socket.id}`);
     } else {
       game.players.push({
         userId: data.playerId,
@@ -716,44 +721,128 @@ io.on("connection", (socket) => {
         position: null,
         turnOrder: game.players.length
       });
+      console.log(`➕ Jugador ${data.playerId} agregado a ${roomKey}`);
     }
 
-    console.log(`✅ Jugador ${data.playerId} con socket ${socket.id} se unió a ${roomKey}`);
-    console.log(`📊 Jugadores en ${roomKey}:`, game.players.map(p => `${p.username}(${p.socketId})`));
+    console.log(`📊 Jugadores en ${roomKey}:`, game.players.map(p => p.username));
 
-    io.to(req.session.room).emit("playerJoined", { room: req.session.room, timestamp: new Date() });
-  });
-
-  socket.on("startGame", ({ room }) => {
-    const game = games[room];
-    if (!game) return;
-
-    game.started = true;
-
-    // Avisar a todos los jugadores que el juego empezó
-    io.to(room).emit("gameStarted", { message: "El juego comenzó" });
-
-    console.log(`🎮 Juego iniciado en sala ${room}`);
+    io.to(req.session.room).emit("playerJoined", { 
+      room: req.session.room, 
+      players: game.players,
+      timestamp: new Date() 
+    });
   });
 
   // --- Inicializar juego ---
   socket.on("initializeGame", ({ joinCode }) => {
     const game = games[joinCode];
-    if (!game) return;
+    if (!game) {
+      console.error("❌ No existe game para:", joinCode);
+      return;
+    }
 
-    // Ejemplo: asignar posiciones iniciales
+    // Asignar posiciones iniciales (salidas)
     const salidas = [
-      { x: 0, y: 7 }, { x: 5, y: 0 }, { x: 6, y: 15 }, { x: 11, y: 9 }
+      { x: 0, y: 7 },   // Salida 1
+      { x: 5, y: 0 },   // Salida 2
+      { x: 6, y: 15 },  // Salida 3
+      { x: 11, y: 9 }   // Salida 4
     ];
-    game.players.forEach((p, i) => p.position = salidas[i % salidas.length]);
+    
+    game.players.forEach((p, i) => {
+      p.position = salidas[i % salidas.length];
+      p.turnOrder = i;
+    });
 
     game.started = true;
-    socket.emit("gameInitialized", { players: game.players, currentTurn: game.currentTurn });
-    console.log(`🚀 Juego inicializado en sala ${joinCode}`);
+    game.currentTurn = 0;
 
+    console.log(`🚀 Juego inicializado en ${joinCode}. Turno inicial: 0`);
+
+    // Enviar a todos los jugadores
+    io.to(joinCode).emit("gameInitialized", { 
+      players: game.players, 
+      currentTurn: game.currentTurn 
+    });
   });
 
-  // --- Repartir cartas ---
+  // --- Tirar dado ---
+  socket.on("rollDice", ({ joinCode, playerId, diceValue }) => {
+    const game = games[joinCode];
+    if (!game) return;
+
+    const player = game.players.find(p => p.userId === playerId);
+    if (!player || player.turnOrder !== game.currentTurn) {
+      console.warn("⚠️ No es el turno de", playerId);
+      return;
+    }
+
+    console.log(`🎲 ${playerId} tiró ${diceValue}`);
+
+    // Enviar a todos
+    io.to(joinCode).emit("diceRolled", { 
+      playerId, 
+      diceValue,
+      currentTurn: game.currentTurn 
+    });
+  });
+
+  // --- Mover jugador ---
+  socket.on("movePlayer", ({ joinCode, playerId, newPosition }) => {
+    const game = games[joinCode];
+    if (!game) return;
+
+    const player = game.players.find(p => p.userId === playerId);
+    if (!player) return;
+
+    if (player.turnOrder !== game.currentTurn) {
+      console.warn("⚠️ No es el turno de", playerId);
+      return;
+    }
+
+    player.position = newPosition;
+    console.log(`🚶 ${playerId} se movió a (${newPosition.x}, ${newPosition.y})`);
+
+    io.to(joinCode).emit("playerMoved", { 
+      playerId, 
+      newPosition 
+    });
+  });
+
+  // --- Cambiar turno ---
+  socket.on("changeTurn", ({ joinCode, nextTurn }) => {
+    console.log("========================================");
+    console.log("📨 Evento changeTurn recibido:");
+    console.log("   - joinCode:", joinCode);
+    console.log("   - nextTurn solicitado:", nextTurn);
+    
+    const game = games[joinCode];
+    if (!game) {
+      console.error("❌ No existe game para joinCode:", joinCode);
+      console.log("   - Games disponibles:", Object.keys(games));
+      console.log("========================================");
+      return;
+    }
+
+    const previousTurn = game.currentTurn;
+    game.currentTurn = nextTurn % game.players.length;
+    
+    console.log("✅ Turno cambiado exitosamente:");
+    console.log("   - Turno anterior:", previousTurn);
+    console.log("   - Turno nuevo:", game.currentTurn);
+    console.log("   - Jugador actual:", game.players[game.currentTurn]?.username);
+    console.log("   - Emitiendo a sala:", joinCode);
+    console.log("========================================");
+
+    // Emitir a TODOS los jugadores en la sala
+    io.to(joinCode).emit("turnChanged", { 
+      currentTurn: game.currentTurn,
+      previousTurn: previousTurn,
+      currentPlayer: game.players[game.currentTurn]
+    });
+  });
+
+  // --- Repartir cartas (alternativo por socket) ---
   socket.on("repartirCartas", ({ joinCode }) => {
     const game = games[joinCode];
     if (!game) return;
@@ -770,38 +859,24 @@ io.on("connection", (socket) => {
     game.players.forEach(player => {
       if (player.socketId) {
         io.to(player.socketId).emit("cartas_repartidas", cartasPorJugador[player.userId]);
-        console.log(`🃏 Cartas enviadas a ${player.userId}:`, cartasPorJugador[player.userId]);
-      } else {
-        console.warn(`⚠️ No hay socketId para ${player.userId}`);
+        console.log(`🃏 Cartas enviadas a ${player.userId}`);
       }
     });
   });
 
-  // --- Movimiento de jugador ---
-  socket.on("movePlayer", ({ joinCode, userId, newPosition }) => {
-    const game = games[joinCode];
-    if (!game) return;
-    const player = game.players.find(p => p.userId === userId);
-    if (!player) return;
-    if (player.turnOrder !== game.currentTurn) return;
-
-    player.position = newPosition;
-    io.to(joinCode).emit("playerMoved", { playerId: userId, newPosition });
-  });
-
-  // --- Cambiar turno ---
-  socket.on("nextTurn", ({ joinCode }) => {
-    const game = games[joinCode];
-    if (!game) return;
-    game.currentTurn = (game.currentTurn + 1) % game.players.length;
-    io.to(joinCode).emit("turnChanged", { currentTurn: game.currentTurn });
-  });
-
   // --- Desconexión ---
   socket.on("disconnect", () => {
-    console.log("Usuario desconectado:", socket.playerId);
+    console.log("❌ Socket desconectado:", socket.id);
+    
     if (socket.playerId && socket.joinCode) {
-      io.to(socket.joinCode).emit("playerLeft", { playerId: socket.playerId });
+      const game = games[socket.joinCode];
+      if (game) {
+        const player = game.players.find(p => p.socketId === socket.id);
+        if (player) {
+          console.log(`👋 ${player.username} se desconectó`);
+          io.to(socket.joinCode).emit("playerLeft", { playerId: socket.playerId });
+        }
+      }
     }
   });
 });

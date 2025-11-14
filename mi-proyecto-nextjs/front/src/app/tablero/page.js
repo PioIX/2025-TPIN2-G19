@@ -39,6 +39,7 @@ export default function Tablero() {
         if (!socket || !isConnected || seUnio) return
         if (!joinCode || !userId) return
 
+        console.log("🔗 Uniéndose a la sala:", joinCode, "con userId:", userId);
         socket.emit("joinRoom", { room: joinCode, playerId: userId, joinCode })
         setSeUnio(true)
     }, [socket, isConnected, joinCode, userId, seUnio])
@@ -53,6 +54,7 @@ export default function Tablero() {
     // Actualizar jugadores y turno al inicializar juego
     useEffect(() => {
         if (!gameInitialized) return
+        console.log("📊 Datos de inicialización recibidos:", gameInitialized)
         setJugadores(gameInitialized.players)
         setTurnoActual(gameInitialized.currentTurn)
     }, [gameInitialized])
@@ -60,12 +62,14 @@ export default function Tablero() {
     // Actualizar dado tirado
     useEffect(() => {
         if (!diceRolled) return
+        console.log("🎲 Actualizando dado:", diceRolled)
         setNumeroObtenido(diceRolled.diceValue)
     }, [diceRolled])
 
     // Actualizar posición de jugador movido
     useEffect(() => {
         if (!playerMoved) return
+        console.log("🚶 Actualizando posición:", playerMoved)
         setJugadores(prev => prev.map(j =>
             j.userId === playerMoved.playerId ? { ...j, position: playerMoved.newPosition } : j
         ))
@@ -74,9 +78,24 @@ export default function Tablero() {
     // Actualizar turno
     useEffect(() => {
         if (!turnChanged) return
+        
+        console.log("========================================");
+        console.log("⏭️ EVENTO turnChanged RECIBIDO:");
+        console.log("   - Turno anterior:", turnoActual);
+        console.log("   - Turno nuevo:", turnChanged.currentTurn);
+        console.log("   - Datos completos:", turnChanged);
+        console.log("========================================");
+        
         setTurnoActual(turnChanged.currentTurn)
-        setNumeroObtenido(0)
+        setNumeroObtenido(0) // Reiniciar dado
     }, [turnChanged])
+
+    // Resetear dado cuando cambia el turno local
+    useEffect(() => {
+        console.log("🔄 Estado turnoActual actualizado a:", turnoActual);
+        console.log("   - esMiTurno:", jugadores.find(j => j.turnOrder === turnoActual)?.userId === userId);
+        setNumeroObtenido(0)
+    }, [turnoActual])
 
     // Obtener usuarios en la sala
     useEffect(() => {
@@ -87,7 +106,6 @@ export default function Tablero() {
                 const res = await fetch(`http://localhost:4000/usersInRoom?joinCode=${joinCode}`)
                 const usuarios = await res.json()
                 setUsersInRoom(usuarios)
-                setJugadores(usuarios)
             } catch (err) {
                 console.error("Error al obtener usuarios:", err)
             }
@@ -98,20 +116,23 @@ export default function Tablero() {
 
     // Manejar cartas repartidas desde socket
     useEffect(() => {
-        if (!socket) return
-        const handleCartas = (cartas) => setMisCartas(cartas)
-        socket.on("cartas_repartidas", handleCartas)
-        return () => socket.off("cartas_repartidas", handleCartas)
-    }, [socket])
-
-    // Mantener cartasRepartidas del hook
-    useEffect(() => {
-        if (cartasRepartidas) setMisCartas(cartasRepartidas)
+        if (cartasRepartidas) {
+            console.log("🃏 Cartas actualizadas:", cartasRepartidas)
+            setMisCartas(cartasRepartidas)
+        }
     }, [cartasRepartidas])
 
     // Función para mover jugador
     const moverJugador = (nuevaPosicion) => {
         if (!socket || !joinCode || !userId) return
+        
+        const miTurno = jugadores.find(j => j.turnOrder === turnoActual)?.userId === userId
+        if (!miTurno) {
+            alert("⚠️ No es tu turno")
+            return
+        }
+
+        console.log("📍 Moviendo jugador a:", nuevaPosicion)
         socket.emit("movePlayer", { joinCode, playerId: userId, newPosition: nuevaPosicion })
     }
 
@@ -125,13 +146,23 @@ export default function Tablero() {
             return
         }
 
+        // Verificar que no haya tirado ya
+        if (numeroObtenido > 0) {
+            alert("⚠️ Ya tiraste el dado este turno")
+            return
+        }
+
         const diceValue = Math.floor(Math.random() * 6) + 1
+        console.log("🎲 Tirando dado:", diceValue)
         socket.emit("rollDice", { joinCode, playerId: userId, diceValue })
     }
 
     // Pasar turno
     const pasarTurno = () => {
-        if (!socket || !joinCode || !userId) return
+        if (!socket || !joinCode || !userId) {
+            console.error("❌ Faltan datos para pasar turno");
+            return;
+        }
 
         const miTurno = jugadores.find(j => j.turnOrder === turnoActual)?.userId === userId
         if (!miTurno) {
@@ -140,6 +171,7 @@ export default function Tablero() {
         }
 
         const nextTurn = (turnoActual + 1) % jugadores.length
+        console.log("⏭️ Pasando turno de", turnoActual, "→", nextTurn, "en sala:", joinCode)
         socket.emit("changeTurn", { joinCode, nextTurn })
     }
 
@@ -151,7 +183,7 @@ export default function Tablero() {
         }
 
         try {
-            console.log("Enviando datos:", { joinCode, cardsCharacters, cardsWeapons, cardsRooms });
+            console.log("🎴 Repartiendo cartas...");
             const res = await fetch("http://localhost:4000/iniciarPartida", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -171,7 +203,6 @@ export default function Tablero() {
             }
 
             console.log("✅ Cartas repartidas correctamente");
-            // Las cartas llegarán por socket automáticamente
 
         } catch (err) {
             console.error("❌ Error al repartir cartas:", err);
@@ -181,23 +212,22 @@ export default function Tablero() {
     const abrirModalAcusacion = () => setModalAcusacionAbierto(true)
     const cerrarModalAcusacion = () => setModalAcusacionAbierto(false)
 
+    // Verificar si es el turno del jugador actual
+    const esMiTurno = jugadores.find(j => j.turnOrder === turnoActual)?.userId === userId
+
     return (
         <div className={styles["pagina-tablero"]}>
             {/* Panel de info */}
-            <div style={{
-                position: 'fixed', top: '10px', right: '10px', backgroundColor: 'rgba(0,0,0,0.9)',
-                color: 'white', padding: '15px', borderRadius: '8px', fontSize: '14px',
-                zIndex: 1000, minWidth: '200px'
-            }}>
-                <h3 style={{ margin: '0 0 10px 0', borderBottom: '2px solid #4CAF50', paddingBottom: '5px' }}>
-                    📊 Info
-                </h3>
-                <p>🎮 <strong>Sala:</strong> {joinCode || "..."}</p>
+            <div className={styles["info-panel"]}>
+                <h3>📊 Info del Juego</h3>
+                <p>🎮 <strong>Sala:</strong> {joinCode || "Cargando..."}</p>
                 <p>👤 <strong>Tu ID:</strong> {userId || "..."}</p>
-                <p>🎯 <strong>Turno:</strong> Jugador {turnoActual + 1}</p>
-                <p>🎲 <strong>Dado:</strong> {numeroObtenido || "❌"}</p>
+                <p className={esMiTurno ? styles["turno-destacado"] : ""}>
+                    🎯 <strong>Turno:</strong> Jugador {turnoActual + 1} {esMiTurno && "👈 ¡TU TURNO!"}
+                </p>
+                <p>🎲 <strong>Dado:</strong> {numeroObtenido || "Sin tirar"}</p>
                 <p>👥 <strong>Jugadores:</strong> {jugadores.length}</p>
-                <p>🔌 <strong>Socket:</strong> {isConnected ? "✅" : "❌"}</p>
+                <p>🔌 <strong>Conexión:</strong> {isConnected ? "✅ Conectado" : "❌ Desconectado"}</p>
             </div>
 
             <Anotador />
@@ -208,33 +238,74 @@ export default function Tablero() {
                 currentTurn={turnoActual}
                 numeroObtenido={numeroObtenido}
                 onMoverJugador={moverJugador}
+                onPasarTurno={pasarTurno}
+                esMiTurno={esMiTurno}
             />
 
             {/* Botones */}
-            <div style={{
-                position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
-                display: 'flex', gap: '10px', zIndex: 1000
-            }}>
-                <button onClick={obtenerNumeroAleatorio} style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+            <div className={styles["botones-container"]}>
+                <button 
+                    onClick={obtenerNumeroAleatorio} 
+                    disabled={!esMiTurno || numeroObtenido > 0}
+                    className={`${styles["btn-base"]} ${styles["btn-dado"]}`}
+                >
                     🎲 Tirar dado
                 </button>
 
-                <button onClick={pasarTurno} style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#2196F3', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <button 
+                    onClick={pasarTurno} 
+                    disabled={!esMiTurno}
+                    className={`${styles["btn-base"]} ${styles["btn-turno"]}`}
+                >
                     ⏭️ Pasar turno
                 </button>
 
-                <button onClick={repartirCartas} style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#FF9800', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <button 
+                    onClick={repartirCartas}
+                    className={`${styles["btn-base"]} ${styles["btn-cartas"]}`}
+                >
                     🎴 Repartir cartas
                 </button>
 
-                <button onClick={abrirModalAcusacion} style={{ padding: '12px 24px', fontSize: '16px', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <button 
+                    onClick={abrirModalAcusacion}
+                    className={`${styles["btn-base"]} ${styles["btn-acusacion"]}`}
+                >
                     🔍 Hacer Acusación
                 </button>
             </div>
 
+            {/* Indicador de dado flotante */}
+            {numeroObtenido > 0 && esMiTurno && (
+                <div style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                    color: 'white',
+                    padding: '40px 60px',
+                    borderRadius: '20px',
+                    fontSize: '80px',
+                    fontWeight: 'bold',
+                    zIndex: 1500,
+                    boxShadow: '0 10px 50px rgba(0, 0, 0, 0.5)',
+                    border: '3px solid #4CAF50',
+                    animation: 'diceAppear 0.5s ease',
+                    textAlign: 'center'
+                }}>
+                    🎲 {numeroObtenido}
+                    <div style={{ fontSize: '18px', marginTop: '15px', color: '#4CAF50' }}>
+                        ¡Selecciona dónde moverte!
+                    </div>
+                </div>
+            )}
+
             {modalAcusacion && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-                    <FormsAcusacion onCerrar={cerrarModalAcusacion} />
+                <div className={styles["modal-overlay"]} onClick={cerrarModalAcusacion}>
+                    <div className={styles["modal-content"]} onClick={(e) => e.stopPropagation()}>
+                        <FormsAcusacion onCerrar={cerrarModalAcusacion} />
+                    </div>
                 </div>
             )}
 
