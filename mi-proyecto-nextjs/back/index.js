@@ -687,6 +687,8 @@ app.post('/joinroom', async (req, res) => {
 
 //SOCKET 
 
+const activeHypothesis = new Map();
+
 io.on("connection", (socket) => {
   const req = socket.request;
   console.log("🔌 Nuevo socket conectado:", socket.id);
@@ -876,7 +878,196 @@ io.on("connection", (socket) => {
     });
   });
 
-  // --- Desconexión ---
+  socket.on("makeHypothesis", ({ joinCode, playerId, hypothesis }) => {
+    console.log("========================================");
+    console.log("📢 Hipótesis recibida:");
+    console.log("   - joinCode:", joinCode);
+    console.log("   - playerId:", playerId);
+    console.log("   - hypothesis:", hypothesis);
+    
+    const game = games[joinCode];
+    if (!game) {
+      console.error("❌ Sala no encontrada:", joinCode);
+      console.log("========================================");
+      return;
+    }
+
+    const player = game.players.find(p => p.userId === playerId);
+    if (!player) {
+      console.error("❌ Jugador no encontrado:", playerId);
+      console.log("========================================");
+      return;
+    }
+
+    // Crear cola de respuesta (todos los jugadores excepto quien hizo la hipótesis)
+    // El orden comienza con el siguiente jugador en el turno
+    const currentTurnIndex = game.players.findIndex(p => p.turnOrder === game.currentTurn);
+    const responderQueue = [];
+    
+    console.log("   - Turno actual index:", currentTurnIndex);
+    console.log("   - Total jugadores:", game.players.length);
+    
+    for (let i = 1; i < game.players.length; i++) {
+      const nextIndex = (currentTurnIndex + i) % game.players.length;
+      const nextPlayer = game.players[nextIndex];
+      if (nextPlayer.userId !== playerId) {
+        responderQueue.push({
+          userId: nextPlayer.userId,
+          username: nextPlayer.username || `Jugador ${nextPlayer.userId}`
+        });
+        console.log(`   - Agregado a cola: ${nextPlayer.username} (${nextPlayer.userId})`);
+      }
+    }
+
+    if (responderQueue.length === 0) {
+      console.error("❌ No hay otros jugadores para responder");
+      console.log("========================================");
+      return;
+    }
+
+    // Guardar hipótesis activa
+    activeHypothesis.set(joinCode, {
+      hypothesis,
+      playerId,
+      playerName: player.username || `Jugador ${playerId}`,
+      responderQueue,
+      currentResponderIndex: 0
+    });
+
+    const currentResponder = responderQueue[0];
+
+    console.log("✅ Hipótesis guardada exitosamente");
+    console.log("   - Primer respondedor:", currentResponder.username);
+    console.log("========================================");
+
+    // Anunciar hipótesis a todos los jugadores
+    io.to(joinCode).emit("hypothesisAnnounced", {
+      playerId,
+      playerName: player.username || `Jugador ${playerId}`,
+      hypothesis,
+      currentResponderId: currentResponder.userId,
+      currentResponderName: currentResponder.username
+    });
+
+    console.log("📤 Hipótesis anunciada a todos en sala:", joinCode);
+  });
+
+  // --- Responder a una hipótesis ---
+  socket.on("respondHypothesis", ({ joinCode, playerId, cardRevealed }) => {
+    console.log("========================================");
+    console.log("💬 Respuesta de hipótesis recibida:");
+    console.log("   - joinCode:", joinCode);
+    console.log("   - playerId:", playerId);
+    console.log("   - cardRevealed:", cardRevealed);
+
+    const hypothesisData = activeHypothesis.get(joinCode);
+    if (!hypothesisData) {
+      console.error("❌ No hay hipótesis activa para:", joinCode);
+      console.log("========================================");
+      return;
+    }
+
+    const game = games[joinCode];
+    if (!game) {
+      console.error("❌ Sala no encontrada:", joinCode);
+      console.log("========================================");
+      return;
+    }
+
+    const responder = game.players.find(p => p.userId === playerId);
+    if (!responder) {
+      console.error("❌ Jugador respondedor no encontrado:", playerId);
+      console.log("========================================");
+      return;
+    }
+
+    // Si el jugador tiene una carta para revelar
+    if (cardRevealed) {
+      console.log("✅ Carta revelada:", cardRevealed);
+      console.log("   - Por jugador:", responder.username);
+      
+      // Enviar resultado a todos
+      io.to(joinCode).emit("hypothesisResult", {
+        cardRevealed,
+        responderName: responder.username || `Jugador ${playerId}`,
+        responderId: playerId,
+        hypothesisPlayerId: hypothesisData.playerId
+      });
+
+      // Limpiar hipótesis activa
+      activeHypothesis.delete(joinCode);
+
+      // Pasar al siguiente turno
+      const nextTurn = (game.currentTurn + 1) % game.players.length;
+      game.currentTurn = nextTurn;
+      
+      console.log("⏭️ Pasando al siguiente turno:", nextTurn);
+      
+      io.to(joinCode).emit("turnChanged", { 
+        currentTurn: nextTurn,
+        previousTurn: game.currentTurn,
+        currentPlayer: game.players[nextTurn]
+      });
+
+      console.log("✅ Hipótesis resuelta con carta revelada");
+      console.log("========================================");
+      return;
+    }
+
+    // Si no tiene carta, pasar al siguiente en la cola
+    console.log("➡️ Jugador no tiene carta, pasando al siguiente...");
+    hypothesisData.currentResponderIndex++;
+
+    // Si llegamos al final de la cola (nadie tiene cartas)
+    if (hypothesisData.currentResponderIndex >= hypothesisData.responderQueue.length) {
+      console.log("❌ Nadie tiene ninguna de las cartas");
+      
+      // Nadie tiene ninguna de las cartas
+      io.to(joinCode).emit("hypothesisResult", {
+        cardRevealed: null,
+        responderName: null,
+        responderId: null,
+        hypothesisPlayerId: hypothesisData.playerId
+      });
+
+      // Limpiar hipótesis activa
+      activeHypothesis.delete(joinCode);
+
+      // Pasar al siguiente turno
+      const nextTurn = (game.currentTurn + 1) % game.players.length;
+      game.currentTurn = nextTurn;
+      
+      console.log("⏭️ Pasando al siguiente turno:", nextTurn);
+      
+      io.to(joinCode).emit("turnChanged", { 
+        currentTurn: nextTurn,
+        previousTurn: game.currentTurn,
+        currentPlayer: game.players[nextTurn]
+      });
+
+      console.log("✅ Hipótesis finalizada - nadie tiene cartas");
+      console.log("========================================");
+      return;
+    }
+
+    // Pedir al siguiente jugador que responda
+    const nextResponder = hypothesisData.responderQueue[hypothesisData.currentResponderIndex];
+    
+    console.log("➡️ Solicitando respuesta a:", nextResponder.username);
+    
+    io.to(joinCode).emit("hypothesisAnnounced", {
+      playerId: hypothesisData.playerId,
+      playerName: hypothesisData.playerName,
+      hypothesis: hypothesisData.hypothesis,
+      currentResponderId: nextResponder.userId,
+      currentResponderName: nextResponder.username
+    });
+
+    console.log("✅ Siguiente respuesta solicitada");
+    console.log("========================================");
+  });
+
+  // --- Desconexión (ya existente, no modificar) ---
   socket.on("disconnect", () => {
     console.log("❌ Socket desconectado:", socket.id);
     
@@ -891,4 +1082,5 @@ io.on("connection", (socket) => {
       }
     }
   });
+
 });
