@@ -140,6 +140,7 @@ export default function Tablero() {
     // Solicitar respuesta a un jugador específico
     socket.on("requestHypothesisResponse", (data) => {
       console.log("❓ Se solicita respuesta de hipótesis:", data)
+      setModalHipotesis(prev => ({ ...prev, currentResponderId: data.responderId }))
       // Solo el jugador al que le toca responder verá los botones
       if (data.responderId === userId) {
         setEsperandoRespuesta(true)
@@ -383,13 +384,13 @@ export default function Tablero() {
               borderRadius: '12px',
               marginBottom: '30px'
             }}>
-              <p style={{ fontSize: '18px', marginBottom: '10px' }}>
+              <p style={{ fontSize: '18px', marginBottom: '10px', color:'#000000ff' }}>
                 <strong>🕵️ Sospechoso:</strong> {modalHipotesis.hypothesis.sospechoso}
               </p>
-              <p style={{ fontSize: '18px', marginBottom: '10px' }}>
+              <p style={{ fontSize: '18px', marginBottom: '10px', color:'#000000ff'  }}>
                 <strong>🔪 Arma:</strong> {modalHipotesis.hypothesis.arma}
               </p>
-              <p style={{ fontSize: '18px' }}>
+              <p style={{ fontSize: '18px', color:'#000000ff' }}>
                 <strong>🏠 Habitación:</strong> {modalHipotesis.hypothesis.habitacion}
               </p>
             </div>
